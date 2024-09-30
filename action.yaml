@@ -38,6 +38,10 @@ runs:
       sudo sysdig -r /tmp/capture.scap -c topconns.lua >> /tmp/top_connection.txt
       sudo sysdig -r /tmp/capture.scap -c topprocs_net.lua  >> /tmp/topprocs_net.txt
 
+      echo "Test domain names extraction"
+      sudo sysdig -r /tmp/capture.scap "evt.type = recvmsg and fd.rport=53" -p "%evt.buffer" | grep -o -E "[a-zA-Z0-9-]+(.[a-zA-Z0-9-]+)+" | sort | uniq >> /tmp/dns_extract.txt
+      cat /tmp/dns_extract.txt
+
       ls -la /tmp/
       cat /tmp/top_connection.txt  
 
