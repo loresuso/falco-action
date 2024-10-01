@@ -7,7 +7,11 @@ inputs:
     required: false
   profile_dir:
     description: 'Profile dir in repository (Default .sysdig)'
-    default: './.sysdig'
+    default: '.sysdig'
+  captures:
+    description: "Save Files on S3?"
+    type: boolean
+    default: false
 runs:
   using: 'composite'
   steps:
@@ -20,18 +24,24 @@ runs:
   - name: Start Falco
     shell: bash
     run: |
+
+      MOUNT_CUSTOM_RULE=""
+      if [[ -f ${{inputs.rule_file}} ]]; then
+        MOUNT_CUSTOM_RULE="-v ${{inputs.rule_file}}:/etc/falco/rules.d/custom_rules.yaml"
+      fi
+
       docker run --rm --name falco --privileged \
         -v /var/run/docker.sock:/host/var/run/docker.sock \
         -v /proc:/host/proc:ro -v /etc:/host/etc:ro \
         -v /tmp:/tmp \
-        -v ${{inputs.rule_file}}:/etc/falco/rules.d/custom_rules.yaml \
+        $MOUNT_CUSTOM_RULE \
         falcosecurity/falco-no-driver:latest falco -o "json_output=true" -o "file_output.enabled=true" -o "file_output.keep_alive=false" -o "file_output.filename=/tmp/falco_events.json" -o "engine.kind=replay" -o "engine.replay.capture_file=/tmp/capture.scap" 
 
       echo "Installing sysdig"
       curl -s https://download.sysdig.com/stable/install-sysdig | sudo bash
 
       sudo sysdig -r /tmp/capture.scap "(((evt.type = connect and evt.dir=<) or (evt.type in (sendto,sendmsg,sendmmsg) and evt.dir=< and fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and (fd.typechar = 4 or fd.typechar = 6) and (fd.ip != \"0.0.0.0\" and fd.net != \"127.0.0.0/8\" and not fd.snet in (\"10.0.0.0/8\", \"172.16.0.0/12\", \"192.168.0.0/16\"))) and not proc.name in (pythonist, dragent, ssm-agent-worke) and not proc.pname in (eic_curl_author, dhclient-script)" -j -p %fd.sip,%fd.sport,%proc.name,%proc.exepath,%user.name | sort | uniq >> /tmp/outbound.txt
-      sudo sysdig -r /tmp/capture.scap "evt.type in (open,openat,openat2) and evt.is_open_write=true and fd.typechar=\"f\" and fd.num>=0 and (not fd.name startswith \"/dev/null\" and not fd.name startswith \"/dev/tty\" and not fd.name startswith \"/var/cache/apt/archives\" and not fd.name startswith \"/var/lib/apt/lists\" and not fd.name startswith \"/var/lib/dpkg/\" and not fd.name startswith \"/var/log/apt/\" and not fd.name contains \"__pycache__\" and not fd.name startswith \"/home/runner/work/_temp/\" and not fd.filename in (\"runBin.log\", \"binaries_found.log\") )" -j -p %fd.name,%proc.name,%proc.exepath,%user.name | sort | uniq > /tmp/files_written.txt
+      sudo sysdig -r /tmp/capture.scap "evt.type in (open,openat,openat2) and evt.is_open_write=true and fd.typechar=\"f\" and fd.num>=0 and ( not fd.name startswith \"/var/lib/docker/\" and not fd.name startswith \"/home/runner/work/_temp/_runner_file_commands/\") and not (fd.name startswith \"/home/runner/runners/\" and proc.exepath endswith \"/bin/Runner.Worker\" and proc.pexepath endswith \"/bin/Runner.Listener\")" -j -p %fd.name,%proc.name,%proc.exepath,%proc.pexepath,%user.name | sort | uniq > /tmp/files_written.txt
       sudo sysdig -r /tmp/capture.scap "evt.type in (execve, execveat) and evt.dir=< and evt.arg.res=0" -j -p %proc.name,%proc.exepath,%proc.pname,%proc.pexepath,%user.name | sort | uniq > /tmp/proc.txt
 
       sudo sysdig -r /tmp/capture.scap -c udp_extract.lua >> /tmp/udp_extract.txt
@@ -39,6 +49,7 @@ runs:
       sudo sysdig -r /tmp/capture.scap -c topprocs_net.lua  >> /tmp/topprocs_net.txt
 
       echo "Test domain names extraction"
+
       sudo sysdig -r /tmp/capture.scap "evt.type in (recvmsg) and fd.rport=53 and fd.rip!=127.0.0.53 and not evt.buffer contains '->'" -p "%evt.buffer" > /tmp/buffers.txt
       echo "Buffers" && cat /tmp/buffers.txt
       cat /tmp/buffers.txt | grep -o -E "[a-zA-Z0-9-]+(.[a-zA-Z0-9-]+)+" | sort | uniq > /tmp/dns_extract.txt
@@ -67,13 +78,35 @@ runs:
       echo "$PROFILE_PATH"
       if [ ! -d "PROFILE_PATH" ]; then
         echo "Creating profile dir"
-        mkdir -p "${{inputs.profile_dir}}"
-        cp /tmp/proc.txt ./.sysdig/profile_proc.txt
-        cp /tmp/files_written.txt ./.sysdig/profile_files_written.txt
-        cp /tmp/outbound.txt ./.sysdig/profile_conn.txt
+        mkdir -p "./${{inputs.profile_dir}}"
+        ls -la .sysdig/
+        whoami
+        cp /tmp/proc.txt .sysdig/profile_proc.txt
+        cp /tmp/files_written.txt .sysdig/profile_files_written.txt
+        cp /tmp/outbound.txt .sysdig/profile_conn.txt
       fi
 
       echo "$GITHUB_WORKFLOW"
       
       #${{github.action_path}}/push_profile.sh
       ${{github.action_path}}/.sysdig/push_profile.sh
+
+
+  - name: Set up AWS CLI and Save captures and events on S3 bucket
+    if: ${{ inputs.captures == 'true'}}
+    shell: bash
+    run: |
+        sudo apt-get update
+        sudo apt-get install -y awscli
+ 
+        aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+        aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+        aws configure set default.region ${{ env.AWS_DEFAULT_REGION }}
+
+        FOLDER_NAME=$(date +"%Y%m%d_%H%M%S")
+        CAPTURE_FILE_NAME="capture_$FOLDER_NAME.scap"
+        EVENT_FILE_NAME="events_$FOLDER_NAME.json"
+        S3_DESTINATION_FOLDER="s3://${{ env.S3_BUCKET }}/$FOLDER_NAME"
+        echo $S3_DESTINATION
+        aws s3 cp /tmp/capture.scap "$S3_DESTINATION_FOLDER/$CAPTURE_FILE_NAME"
+        #aws s3 cp ${{ env.EVENT_FILE }} "$S3_DESTINATION_FOLDER/$EVENT_FILE_NAME"
