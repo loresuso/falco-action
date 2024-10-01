@@ -51,7 +51,6 @@ runs:
       echo "Test domain names extraction"
 
       sudo sysdig -r /tmp/capture.scap "evt.type in (recvmsg) and fd.rport=53 and fd.rip!=127.0.0.53 and not evt.buffer contains '->'" -p "%evt.buffer" > /tmp/buffers.txt
-      echo "Buffers" && cat /tmp/buffers.txt
       cat /tmp/buffers.txt | grep -o -E "[a-zA-Z0-9-]+(.[a-zA-Z0-9-]+)+" | sort | uniq > /tmp/dns_extract.txt
       echo "Extracted DNS domains" && cat /tmp/dns_extract.txt
 
@@ -84,6 +83,7 @@ runs:
         cp /tmp/proc.txt .sysdig/profile_proc.txt
         cp /tmp/files_written.txt .sysdig/profile_files_written.txt
         cp /tmp/outbound.txt .sysdig/profile_conn.txt
+        cp /tmp/dns_extract.txt .sysdig/profile_dns.txt
       fi
 
       echo "$GITHUB_WORKFLOW"
