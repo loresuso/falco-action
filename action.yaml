@@ -69,10 +69,10 @@ runs:
     shell: bash
     run: |
       echo "Test domain names extraction"
-      sudo sysdig -r /tmp/capture.scap "evt.type in (recvmsg,read,recv,recvfrom) and fd.rport=53 and not evt.buffer contains '->'" -p "%evt.buffer" > /tmp/buffers.txt
-      echo "Extracting DNS domains"
-      ls -al /tmp/buffers.txt
-      cat /tmp/buffers.txt | grep -o -E "[a-zA-Z0-9-]+(.[a-zA-Z0-9-]+)+" | sort | uniq > /tmp/dns_extract.txt
+      DNS_FILTER="evt.type in (recvmsg,read,recv,recvfrom) and fd.rport=53 
+      DNS_OUTPUT="%evt.buffer"
+      ${{github.action_path}}/.sysdig/run_sysdig.sh filter "/tmp/capture.scap" "$DNS_FILTER" "$DNS_OUTPUT" "/tmp/buffers.txt"
+      cat /tmp/buffers.txt | grep -o -E "[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,})" | grep -E -v "NULL" | grep -E -v "\->" | sort | uniq > /tmp/dns_extract.txt
       echo "Extracted DNS domains" && cat /tmp/dns_extract.txt
 
   - name: Build summary
