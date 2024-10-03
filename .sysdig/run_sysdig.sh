@@ -62,11 +62,15 @@ if [ "$filter_or_chisel" == "filter" ]; then
             sysdig/sysdig:latest -c "sysdig -r \"$scap_file_name\" -j -p \"$output_fields\" \"$filter\" > $output_file" 
 
       # Ensure the output file exists, is not empty and that anybody can read it
+      # Do not fail if the filter does not produce any output, as it may be valid.
       if [ ! -s "$output_file" ]; then
             echo "Error: Output file is non-existent or empty. The filter may not have produced any output."
-            exit 1
+            exit 0
       fi
-      sudo chmod 644 "$output_file"
+      sudo chmod 666 "$output_file"
+      sort -u -o "$output_file" "$output_file"
+      echo "Output file saved at $output_file"
+      cat "$output_file"
 
 elif [ "$filter_or_chisel" == "chisel" ]; then
       # Ensure all the required arguments are provided
@@ -101,5 +105,5 @@ elif [ "$filter_or_chisel" == "chisel" ]; then
             echo "Warning: Output file is non-existent or empty. The chisel may not have produced any output."
             exit 0
       fi
-      sudo chmod 644 "$output_file"
+      sudo chmod 666 "$output_file"
 fi
