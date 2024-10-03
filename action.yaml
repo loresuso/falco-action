@@ -77,7 +77,17 @@ runs:
       echo "Extracting DNS domains"
       cat /tmp/buffers.txt | grep -o -E "[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,})" | grep -E -v "NULL" | grep -E -v "\->" | sort | uniq > /tmp/dns_extract.txt
       echo "Extracted DNS domains" && cat /tmp/dns_extract.txt
-
+  
+  - name: Extract hashes
+    shell: bash
+    run: |      
+      cat /tmp/proc.txt| jq '."proc.exepath"' | tr -d "\"" | while read -r file; do
+        if [ -f "$file" ]; then
+            sha256sum "$file"
+        else
+            echo "Warning: File $file does not exist" >&2
+        fi 
+      done > /tmp/hashes.txt
   - name: Build summary
     shell: bash
     run: |
@@ -119,6 +129,7 @@ runs:
         cp /tmp/files_written.txt .sysdig/profile_files_written.txt
         cp /tmp/outbound.txt .sysdig/profile_conn.txt
         cp /tmp/dns_extract.txt .sysdig/profile_dns.txt
+        cp /tmp/hashes.txt .sysdig/profile_hashes.txt
       fi
 
       echo "$GITHUB_WORKFLOW"
