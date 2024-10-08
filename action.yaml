@@ -88,21 +88,26 @@ runs:
             echo "Warning: File $file does not exist" >&2
         fi 
       done > /tmp/hashes.txt
+
   - name: Build summary
     shell: bash
     run: |
-      echo "# Top Connections" >> $GITHUB_STEP_SUMMARY
-      python3 ${{github.action_path}}/.sysdig/capture_to_md.py /tmp/top_connection.txt >> $GITHUB_STEP_SUMMARY
-
+      # Falco events
       if [[ -s /tmp/falco_events.json ]]; then
         if ${{ github.event_name == 'pull_request' }}; then
           echo "Creating PR comment with triggered signatures"
           ${{github.action_path}}/pr-comment.sh /tmp/falco_events.json ${{ github.token }}
         else
           echo "Printing triggered rules in Job summary"
-          cat /tmp/falco_events.json >> $GITHUB_STEP_SUMMARY
+          echo "# Falco Events" >> $GITHUB_STEP_SUMMARY
+          python3 ${{github.action_path}}/.sysdig/falco_events_to_md.py /tmp/falco_events.json >> $GITHUB_STEP_SUMMARY
         fi
       fi
+
+      # Connections
+      echo "# Top Connections" >> $GITHUB_STEP_SUMMARY
+      python3 ${{github.action_path}}/.sysdig/capture_to_md.py /tmp/top_connection.txt >> $GITHUB_STEP_SUMMARY
+      echo "" >> $GITHUB_STEP_SUMMARY
 
   - name: Test recon files
     shell: bash
