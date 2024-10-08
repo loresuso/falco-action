@@ -68,14 +68,10 @@ runs:
   - name: Extract DNS domains
     shell: bash
     run: |
-      echo "Test domain names extraction"
       DNS_FILTER="evt.type in (recvmsg,read,recv,recvfrom) and fd.rport=53 and fd.l4proto=udp"
       DNS_OUTPUT="%evt.buffer"
       ${{github.action_path}}/.sysdig/run_sysdig.sh filter "/tmp/capture.scap" "$DNS_FILTER" "$DNS_OUTPUT" "/tmp/buffers.txt"
-      echo "Extracted DNS buffers" 
-      cat /tmp/buffers.txt
-      echo "Extracting DNS domains"
-      cat /tmp/buffers.txt | grep -o -E "[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,})" | grep -E -v "NULL" | grep -E -v "\->" | sort | uniq > /tmp/dns_extract.txt
+      cat /tmp/buffers.txt | grep -o -E "[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,})" | grep -E -v "NULL" | grep -E -v "\->" | grep -E -v "evt.buffer" | sort | uniq > /tmp/dns_extract.txt
       echo "Extracted DNS domains" && cat /tmp/dns_extract.txt
   
   - name: Extract executables' hash
