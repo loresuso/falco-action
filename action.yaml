@@ -88,6 +88,7 @@ runs:
             echo "Warning: File $file does not exist" >&2
         fi 
       done > /tmp/hashes.txt
+      sort -u -o /tmp/hashes.txt /tmp/hashes.txt
 
   - name: Build summary
     shell: bash
@@ -108,17 +109,6 @@ runs:
       echo "# Top Connections" >> $GITHUB_STEP_SUMMARY
       python3 ${{github.action_path}}/.sysdig/capture_to_md.py /tmp/top_connection.txt >> $GITHUB_STEP_SUMMARY
       echo "" >> $GITHUB_STEP_SUMMARY
-
-  - name: Test recon files
-    shell: bash
-    run: |
-      ls -alR /home/runner/work/_temp
-      for file in /home/runner/work/_temp/_runner_file_commands/*; do
-        echo "----------------"
-        echo "$file"
-        cat $file
-        echo "----------------"
-      done
 
   - name: Push profile to repository
     shell: bash
