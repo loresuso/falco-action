@@ -44,21 +44,21 @@ runs:
       OUTBOUND_OUTPUT="%fd.sip,%fd.sport,%proc.name,%proc.exepath,%user.name"
       ${{github.action_path}}/.sysdig/run_sysdig.sh filter "/tmp/capture.scap" "$OUTBOUND_FILTER" "$OUTBOUND_OUTPUT" "/tmp/outbound.txt"
 
-  - name: Extract files written
+  - name: Extract written files
     shell: bash
     run: |
       FILE_WRITTEN_FILTER="evt.type in (open,openat,openat2) and evt.is_open_write=true and fd.typechar=\"f\" and fd.num>=0 and ( not fd.name startswith \"/var/lib/docker/\" and not fd.name startswith \"/home/runner/work/_temp/_runner_file_commands/\") and not (fd.name startswith \"/home/runner/runners/\" and proc.exepath endswith \"/bin/Runner.Worker\" and proc.pexepath endswith \"/bin/Runner.Listener\")"
       FILE_WRITTEN_OUTPUT="%fd.name,%proc.name,%proc.exepath,%proc.pexepath,%user.name"
       ${{github.action_path}}/.sysdig/run_sysdig.sh filter "/tmp/capture.scap" "$FILE_WRITTEN_FILTER" "$FILE_WRITTEN_OUTPUT" "/tmp/files_written.txt"
 
-  - name: Extract process information
+  - name: Extract processes information
     shell: bash
     run: |
       PROC_FILTER="evt.type in (execve, execveat) and evt.dir=< and evt.arg.res=0"
       PROC_FILTER_OUTPUT="%proc.name,%proc.exepath,%proc.pname,%proc.pexepath,%user.name"
       ${{github.action_path}}/.sysdig/run_sysdig.sh filter "/tmp/capture.scap" "$PROC_FILTER" "$PROC_FILTER_OUTPUT" "/tmp/proc.txt"
 
-  - name: Extract chisel information for summary
+  - name: Extract chisels information for summary
     shell: bash
     run: |
       ${{github.action_path}}/.sysdig/run_sysdig.sh chisel "/tmp/capture.scap" "udp_extract.lua" "/tmp/udp_extract.txt"
@@ -78,7 +78,7 @@ runs:
       cat /tmp/buffers.txt | grep -o -E "[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,})" | grep -E -v "NULL" | grep -E -v "\->" | sort | uniq > /tmp/dns_extract.txt
       echo "Extracted DNS domains" && cat /tmp/dns_extract.txt
   
-  - name: Extract hashes
+  - name: Extract executables' hash
     shell: bash
     run: |      
       cat /tmp/proc.txt| jq '."proc.exepath"' | tr -d "\"" | while read -r file; do
@@ -90,6 +90,23 @@ runs:
       done > /tmp/hashes.txt
       sort -u -o /tmp/hashes.txt /tmp/hashes.txt
 
+  - name: Retrieve Job Info using GitHub API
+    shell: bash
+    env:
+      RUN_ID: ${{ github.run_id }}
+      REPO: ${{ github.repository }}
+    run: |
+      echo "Retrieving details for run_id=$RUN_ID"
+      curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+        -H "Accept: application/vnd.github.v3+json" \
+        https://api.github.com/repos/$REPO/actions/runs/$RUN_ID/jobs > jobs.json
+      
+      # Parse JSON and retrieve step info with timestamps
+      echo "Job details:"
+      jq '.jobs[] | {job_id: .id, job_name: .name, steps: .steps[] | {name: .name, started_at: .started_at, completed_at: .completed_at}}' jobs.json
+
+      cat jobs.json
+      
   - name: Build summary
     shell: bash
     run: |
