@@ -1,5 +1,6 @@
 import argparse
 from datetime import datetime
+import logging
 import json
 import re
 
@@ -27,27 +28,55 @@ def falco_timestamp_to_datetime(timestamp):
     # Parse the fixed ISO string
     return datetime.fromisoformat(iso_time_str_fixed)
 
+def main():
+    # Set up argument parsing
 
-# Set up argument parsing
-parser = argparse.ArgumentParser(description="Convert JSON Falco events to a Markdown table.")
-parser.add_argument('file', type=str, help='Path to the file containing the JSON Falco events data')
-parser.add_argument('correlation_file', type=str, help='Path to the file containing job steps timestamps')
+    parser = argparse.ArgumentParser(description="Convert JSON Falco events to a Markdown table.")
+    parser.add_argument('file', type=str, help='Path to the file containing the JSON Falco events data')
+    parser.add_argument('correlation_file', type=str, help='Path to the file containing job steps timestamps')
 
-# Parse arguments
-args = parser.parse_args()
+    # Parse arguments
+    args = parser.parse_args()
 
-# Open and read the file
-with open(args.file, "r") as file:
-    lines = file.readlines()
+    # Open and read the file
+    with open(args.file, "r") as file:
+        lines = file.readlines()
 
-output = []
-timeline = []
+    output = []
+    timeline = []
 
-# Open and read the correlation file
-# Populate the timeline list with the job steps timestamps
-with open(args.correlation_file, "r") as file:
-    data = file.readlines()
-    for line in data:
+    # Open and read the correlation file
+    # Populate the timeline list with the job steps timestamps
+    with open(args.correlation_file, "r") as file:
+        data = file.readlines()
+        for line in data:
+            try:
+                obj = json.loads(line)
+            except:
+                print(f"Error parsing JSON: {line}")
+                print("Exiting ...")
+                exit(1)
+
+            try:
+                if obj["steps"]["status"] != "completed":
+                    continue
+            except KeyError:
+                continue
+
+            try: 
+                step_name = obj["steps"]["name"]
+                started_at = datetime.fromisoformat(str(obj["steps"]["started_at"]).replace("Z", "+00:00"))
+                completed_at = datetime.fromisoformat(str(obj["steps"]["completed_at"]).replace("Z", "+00:00"))
+                timeline.append({'step_name': step_name, 'started_at': started_at, 'completed_at': completed_at})
+            except Exception as e:
+                logging.error(f"Error parsing correlation data: {e}")
+                continue
+
+    # Append the Markdown table header
+    output.append("| Timestamp | Step | Rule | Output | Priority |")
+    output.append("|-----------|------|------|--------|----------|")
+
+    for line in lines:
         try:
             obj = json.loads(line)
         except:
@@ -55,38 +84,21 @@ with open(args.correlation_file, "r") as file:
             print("Exiting ...")
             exit(1)
 
-        try:
-            if obj["steps"]["status"] != "completed":
-                continue
-        except KeyError:
-            continue
+        # Append formatted Markdown row
+        fired_at = falco_timestamp_to_datetime(obj["time"])
+        rule = obj["rule"]
+        out = markdown_escape(obj["output"])
+        priority = obj["priority"]
+        matching_steps = get_step_name(fired_at, timeline)
+        if len(matching_steps) == 0:
+            steps = "N/A"
+        else:
+            steps = ", ".join(matching_steps)
 
-        step_name = obj["steps"]["name"]
-        started_at = datetime.fromisoformat(str(obj["steps"]["started_at"]).replace("Z", "+00:00"))
-        completed_at = datetime.fromisoformat(str(obj["steps"]["completed_at"]).replace("Z", "+00:00"))
-        timeline.append({'step_name': step_name, 'started_at': started_at, 'completed_at': completed_at})
+        output.append(f"| {fired_at} | {steps} | {rule} | {out} | {priority} | ")
 
-# Append the Markdown table header
-output.append("| Timestamp | Step | Rule | Output | Priority |")
-output.append("|-----------|------|------|--------|----------|")
+    for line in output:
+        print(line)
 
-for line in lines:
-    try:
-        obj = json.loads(line)
-    except:
-        print(f"Error parsing JSON: {line}")
-        print("Exiting ...")
-        exit(1)
-
-    # Append formatted Markdown row
-    fired_at = falco_timestamp_to_datetime(obj["time"])
-    rule = obj["rule"]
-    out = markdown_escape(obj["output"])
-    priority = obj["priority"]
-    matching_steps = get_step_name(fired_at, timeline)
-    steps = ", ".join(matching_steps)
-
-    output.append(f"| {fired_at} | {steps} | {rule} | {out} | {priority} | ")
-
-for line in output:
-    print(line)
+if __name__ == "__main__":
+    main()

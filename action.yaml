@@ -99,10 +99,10 @@ runs:
       
       # Parse JSON and retrieve step info with timestamps
       echo "Job details:"
-      jq -c '.jobs[] | {job_id: .id, job_name: .name, steps: .steps[] | {name: .name, started_at: .started_at, completed_at: .completed_at, status: .status}}' jobs.json
+      jq -c '.jobs[] | {job_id: .id, job_name: .name, steps: .steps[] | {name: .name, started_at: .started_at, completed_at: .completed_at, status: .status}}' jobs.json > steps.json
 
-      cat jobs.json
-      mv jobs.json /tmp/jobs.json
+      cat steps.json
+      mv steps.json /tmp/steps.json
       
   - name: Build summary
     shell: bash
@@ -115,7 +115,7 @@ runs:
         else
           echo "Printing triggered rules in Job summary"
           echo "# Falco Events" >> $GITHUB_STEP_SUMMARY
-          python3 ${{github.action_path}}/.sysdig/falco_events_to_md.py /tmp/falco_events.json /tmp/jobs.json >> $GITHUB_STEP_SUMMARY
+          python3 ${{github.action_path}}/.sysdig/falco_events_to_md.py /tmp/falco_events.json /tmp/steps.json >> $GITHUB_STEP_SUMMARY
         fi
       fi
 
