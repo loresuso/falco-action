@@ -85,6 +85,14 @@ runs:
         fi 
       done > /tmp/hashes.txt
       sort -u -o /tmp/hashes.txt /tmp/hashes.txt
+  
+  - name: Extract docker container images
+    shell: bash
+    run: |
+      CONTAINER_FILTER="evt.type=container"
+      CONTAINER_OUTPUT="%container.name,%container.image.repository"
+      ${{github.action_path}}/.sysdig/run_sysdig.sh filter "/tmp/capture.scap" "$CONTAINER_FILTER" "$CONTAINER_OUTPUT" "/tmp/containers.txt"
+      sort -u -o /tmp/containers.txt /tmp/containers.txt
 
   - name: Retrieve Job Info using GitHub API
     shell: bash
@@ -133,12 +141,12 @@ runs:
         echo "Creating profile dir"
         mkdir -p "./${{inputs.profile_dir}}"
         ls -la .sysdig/
-        whoami
         cp /tmp/proc.txt .sysdig/profile_proc.txt
         cp /tmp/files_written.txt .sysdig/profile_files_written.txt
         cp /tmp/outbound.txt .sysdig/profile_conn.txt
         cp /tmp/dns_extract.txt .sysdig/profile_dns.txt
         cp /tmp/hashes.txt .sysdig/profile_hashes.txt
+        cp /tmp/containers.txt .sysdig/profile_containers.txt
       fi
 
       echo "$GITHUB_WORKFLOW"
