@@ -1,0 +1,174 @@
+name: 'Falco Action Stop'
+description: 'Run Falco in a GitHub Action job to detect suspicious activity.'
+author: 'The Falco Authors'
+inputs:
+  rule_file:
+    description: 'Custom rule file'
+    required: false
+  profile_dir:
+    description: 'Profile dir in repository (Default .sysdig)'
+    default: '.sysdig'
+  captures:
+    description: "Save Files on S3?"
+    type: boolean
+    default: false
+runs:
+  using: 'composite'
+  steps:
+  - name: Stop Sysdig capture
+    shell: bash
+    run: |
+      echo "Stopping Sysdig"
+      docker stop sysdig
+      echo "Sysdig stopped"
+  
+  - name: Start Falco in capture mode and get events
+    shell: bash
+    run: |
+      MOUNT_CUSTOM_RULE=""
+      if [[ -f ${{inputs.rule_file}} ]]; then
+        MOUNT_CUSTOM_RULE="-v ${{inputs.rule_file}}:/etc/falco/rules.d/custom_rules.yaml"
+      fi
+
+      docker run --rm --name falco --privileged \
+        -v /var/run/docker.sock:/host/var/run/docker.sock \
+        -v /proc:/host/proc:ro -v /etc:/host/etc:ro \
+        -v /tmp:/tmp \
+        $MOUNT_CUSTOM_RULE \
+        falcosecurity/falco-no-driver:latest falco -o "json_output=true" -o "file_output.enabled=true" -o "file_output.keep_alive=false" -o "file_output.filename=/tmp/falco_events.json" -o "engine.kind=replay" -o "engine.replay.capture_file=/tmp/capture.scap" 
+
+  - name: Extract outbound connections
+    shell: bash
+    run: |
+      OUTBOUND_FILTER="(((evt.type = connect and evt.dir=<) or (evt.type in (sendto,sendmsg,sendmmsg) and evt.dir=< and fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and (fd.typechar = 4 or fd.typechar = 6) and (fd.ip != \"0.0.0.0\" and fd.net != \"127.0.0.0/8\" and not fd.snet in (\"10.0.0.0/8\", \"172.16.0.0/12\", \"192.168.0.0/16\"))) and not proc.name in (pythonist, dragent, ssm-agent-worke) and not proc.pname in (eic_curl_author, dhclient-script)" 
+      OUTBOUND_OUTPUT="%fd.sip,%fd.sport,%proc.name,%proc.exepath,%user.name"
+      ${{github.action_path}}/stop/src/run_sysdig.sh filter "/tmp/capture.scap" "$OUTBOUND_FILTER" "$OUTBOUND_OUTPUT" "/tmp/outbound.txt"
+
+  - name: Extract written files
+    shell: bash
+    run: |
+      FILE_WRITTEN_FILTER="evt.type in (open,openat,openat2) and evt.is_open_write=true and fd.typechar=\"f\" and fd.num>=0 and ( not fd.name startswith \"/var/lib/docker/\" and not fd.name startswith \"/home/runner/work/_temp/_runner_file_commands/\") and not (fd.name startswith \"/home/runner/runners/\" and proc.exepath endswith \"/bin/Runner.Worker\" and proc.pexepath endswith \"/bin/Runner.Listener\")"
+      FILE_WRITTEN_OUTPUT="%fd.name,%proc.name,%proc.exepath,%proc.pexepath,%user.name"
+      ${{github.action_path}}/stop/src/run_sysdig.sh filter "/tmp/capture.scap" "$FILE_WRITTEN_FILTER" "$FILE_WRITTEN_OUTPUT" "/tmp/files_written.txt"
+
+  - name: Extract processes information
+    shell: bash
+    run: |
+      PROC_FILTER="evt.type in (execve, execveat) and evt.dir=< and evt.arg.res=0"
+      PROC_FILTER_OUTPUT="%proc.name,%proc.exepath,%proc.pname,%proc.pexepath,%user.name"
+      ${{github.action_path}}/stop/src/run_sysdig.sh filter "/tmp/capture.scap" "$PROC_FILTER" "$PROC_FILTER_OUTPUT" "/tmp/proc.txt"
+
+  - name: Extract chisels information for summary
+    shell: bash
+    run: |
+      ${{github.action_path}}/stop/src/run_sysdig.sh chisel "/tmp/capture.scap" "udp_extract.lua" "/tmp/udp_extract.txt"
+      ${{github.action_path}}/stop/src/run_sysdig.sh chisel "/tmp/capture.scap" "topconns.lua" "/tmp/top_connection.txt"
+      ${{github.action_path}}/stop/src/run_sysdig.sh chisel "/tmp/capture.scap" "topprocs_net.lua" "/tmp/topprocs_net.txt"
+
+  - name: Extract DNS domains
+    shell: bash
+    run: |
+      DNS_FILTER="evt.type in (recvmsg,read,recv,recvfrom) and fd.rport=53 and fd.l4proto=udp"
+      DNS_OUTPUT="%evt.buffer"
+      ${{github.action_path}}/stop/src/run_sysdig.sh filter "/tmp/capture.scap" "$DNS_FILTER" "$DNS_OUTPUT" "/tmp/buffers.txt"
+      cat /tmp/buffers.txt | grep -o -E "[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,})" | grep -E -v "NULL" | grep -E -v "\->" | grep -E -v "evt.buffer" | sort | uniq > /tmp/dns_extract.txt
+      echo "Extracted DNS domains" && cat /tmp/dns_extract.txt
+  
+  - name: Extract executables' hash
+    shell: bash
+    run: |      
+      cat /tmp/proc.txt| jq '."proc.exepath"' | tr -d "\"" | while read -r file; do
+        if [ -f "$file" ]; then
+            sha256sum "$file"
+        else
+            echo "Warning: File $file does not exist" >&2
+        fi 
+      done > /tmp/hashes.txt
+      sort -u -o /tmp/hashes.txt /tmp/hashes.txt
+  
+  - name: Extract docker container images
+    shell: bash
+    run: |
+      CONTAINER_FILTER="evt.type=container"
+      CONTAINER_OUTPUT="%container.name,%container.image.repository"
+      ${{github.action_path}}/stop/src/run_sysdig.sh filter "/tmp/capture.scap" "$CONTAINER_FILTER" "$CONTAINER_OUTPUT" "/tmp/containers.txt"
+      sort -u -o /tmp/containers.txt /tmp/containers.txt
+
+  - name: Retrieve Job Info using GitHub API
+    shell: bash
+    env:
+      RUN_ID: ${{ github.run_id }}
+      REPO: ${{ github.repository }}
+    run: |
+      echo "Retrieving details for run_id=$RUN_ID"
+      curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+        -H "Accept: application/vnd.github.v3+json" \
+        https://api.github.com/repos/$REPO/actions/runs/$RUN_ID/jobs > jobs.json
+      
+      # Parse JSON and retrieve step info with timestamps
+      echo "Job details:"
+      jq -c '.jobs[] | {job_id: .id, job_name: .name, steps: .steps[] | {name: .name, started_at: .started_at, completed_at: .completed_at, status: .status}}' jobs.json > steps.json
+
+      cat steps.json
+      mv steps.json /tmp/steps.json
+      
+  - name: Build summary
+    shell: bash
+    run: |
+      # Falco events
+      if [[ -s /tmp/falco_events.json ]]; then
+        if ${{ github.event_name == 'pull_request' }}; then
+          echo "Creating PR comment with triggered signatures"
+          ${{github.action_path}}/pr-comment.sh /tmp/falco_events.json ${{ github.token }}
+        else
+          echo "Printing triggered rules in Job summary"
+          echo "# Falco Events" >> $GITHUB_STEP_SUMMARY
+          python3 ${{github.action_path}}/stop/src/falco_events_to_md.py /tmp/falco_events.json /tmp/steps.json >> $GITHUB_STEP_SUMMARY
+        fi
+      fi
+
+      # Connections
+      echo "# Top Connections" >> $GITHUB_STEP_SUMMARY
+      python3 ${{github.action_path}}/stop/src/capture_to_md.py /tmp/top_connection.txt >> $GITHUB_STEP_SUMMARY
+      echo "" >> $GITHUB_STEP_SUMMARY
+
+  - name: Push profile to repository
+    shell: bash
+    run: |
+      PROFILE_PATH="$GITHUB_WORKSPACE/${{inputs.profile_dir}}"
+      echo "$PROFILE_PATH"
+      if [ ! -d "PROFILE_PATH" ]; then
+        echo "Creating profile dir"
+        mkdir -p "./${{inputs.profile_dir}}"
+        ls -la .sysdig/
+        cp /tmp/proc.txt .sysdig/profile_proc.txt
+        cp /tmp/files_written.txt .sysdig/profile_files_written.txt
+        cp /tmp/outbound.txt .sysdig/profile_conn.txt
+        cp /tmp/dns_extract.txt .sysdig/profile_dns.txt
+        cp /tmp/hashes.txt .sysdig/profile_hashes.txt
+        cp /tmp/containers.txt .sysdig/profile_containers.txt
+      fi
+
+      echo "$GITHUB_WORKFLOW"
+      
+      #${{github.action_path}}/push_profile.sh
+      ${{github.action_path}}/stop/src/push_profile.sh
+
+  - name: Save captures and events on S3 bucket
+    if: ${{ inputs.captures == 'true'}}
+    shell: bash
+    run: |
+        sudo apt-get update
+        sudo apt-get install -y awscli
+ 
+        aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+        aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+        aws configure set default.region ${{ env.AWS_DEFAULT_REGION }}
+
+        FOLDER_NAME=$(date +"%Y%m%d_%H%M%S")
+        CAPTURE_FILE_NAME="capture_$FOLDER_NAME.scap"
+        EVENT_FILE_NAME="events_$FOLDER_NAME.json"
+        S3_DESTINATION_FOLDER="s3://${{ env.S3_BUCKET }}/$FOLDER_NAME"
+        echo $S3_DESTINATION
+        aws s3 cp /tmp/capture.scap "$S3_DESTINATION_FOLDER/$CAPTURE_FILE_NAME"
+        #aws s3 cp ${{ env.EVENT_FILE }} "$S3_DESTINATION_FOLDER/$EVENT_FILE_NAME"
