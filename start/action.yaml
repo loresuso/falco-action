@@ -5,18 +5,19 @@ inputs:
   config_file:
     description: 'start action config file'
     required: false
-    default: 'start/src/ignore.config'
+    default: 'src/ignore.config'
 runs:
   using: 'composite'
   steps:
   - name: Start Sysdig capture
     shell: bash
     run: |
-      IGNORE_FILTER_FOLDER=${{github.action_path}}/start/src
+      IGNORE_FILTER_FOLDER=${{github.action_path}}/src
       CONFIG_FILE="${{github.action_path}}/${{inputs.config_file}}"
 
       if [ ! -e "$CONFIG_FILE" ]; then
         echo "Config File does not exist."
+        echo $CONFIG_FILE
         exit 1
       fi
 
