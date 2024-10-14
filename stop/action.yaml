@@ -22,7 +22,7 @@ runs:
       docker stop sysdig
       echo "Sysdig stopped"
   
-  - name: Start Falco in capture mode and get events
+  - name: Start Falco in capture mode
     shell: bash
     run: |
       MOUNT_CUSTOM_RULE=""
