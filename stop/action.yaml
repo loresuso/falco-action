@@ -42,35 +42,35 @@ runs:
     run: |
       OUTBOUND_FILTER="(((evt.type = connect and evt.dir=<) or (evt.type in (sendto,sendmsg,sendmmsg) and evt.dir=< and fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and (fd.typechar = 4 or fd.typechar = 6) and (fd.ip != \"0.0.0.0\" and fd.net != \"127.0.0.0/8\" and not fd.snet in (\"10.0.0.0/8\", \"172.16.0.0/12\", \"192.168.0.0/16\"))) and not proc.name in (pythonist, dragent, ssm-agent-worke) and not proc.pname in (eic_curl_author, dhclient-script)" 
       OUTBOUND_OUTPUT="%fd.sip,%fd.sport,%proc.name,%proc.exepath,%user.name"
-      ${{github.action_path}}/stop/src/run_sysdig.sh filter "/tmp/capture.scap" "$OUTBOUND_FILTER" "$OUTBOUND_OUTPUT" "/tmp/outbound.txt"
+      ${{github.action_path}}/src/run_sysdig.sh filter "/tmp/capture.scap" "$OUTBOUND_FILTER" "$OUTBOUND_OUTPUT" "/tmp/outbound.txt"
 
   - name: Extract written files
     shell: bash
     run: |
       FILE_WRITTEN_FILTER="evt.type in (open,openat,openat2) and evt.is_open_write=true and fd.typechar=\"f\" and fd.num>=0 and ( not fd.name startswith \"/var/lib/docker/\" and not fd.name startswith \"/home/runner/work/_temp/_runner_file_commands/\") and not (fd.name startswith \"/home/runner/runners/\" and proc.exepath endswith \"/bin/Runner.Worker\" and proc.pexepath endswith \"/bin/Runner.Listener\")"
       FILE_WRITTEN_OUTPUT="%fd.name,%proc.name,%proc.exepath,%proc.pexepath,%user.name"
-      ${{github.action_path}}/stop/src/run_sysdig.sh filter "/tmp/capture.scap" "$FILE_WRITTEN_FILTER" "$FILE_WRITTEN_OUTPUT" "/tmp/files_written.txt"
+      ${{github.action_path}}/src/run_sysdig.sh filter "/tmp/capture.scap" "$FILE_WRITTEN_FILTER" "$FILE_WRITTEN_OUTPUT" "/tmp/files_written.txt"
 
   - name: Extract processes information
     shell: bash
     run: |
       PROC_FILTER="evt.type in (execve, execveat) and evt.dir=< and evt.arg.res=0"
       PROC_FILTER_OUTPUT="%proc.name,%proc.exepath,%proc.pname,%proc.pexepath,%user.name"
-      ${{github.action_path}}/stop/src/run_sysdig.sh filter "/tmp/capture.scap" "$PROC_FILTER" "$PROC_FILTER_OUTPUT" "/tmp/proc.txt"
+      ${{github.action_path}}/src/run_sysdig.sh filter "/tmp/capture.scap" "$PROC_FILTER" "$PROC_FILTER_OUTPUT" "/tmp/proc.txt"
 
   - name: Extract chisels information for summary
     shell: bash
     run: |
-      ${{github.action_path}}/stop/src/run_sysdig.sh chisel "/tmp/capture.scap" "udp_extract.lua" "/tmp/udp_extract.txt"
-      ${{github.action_path}}/stop/src/run_sysdig.sh chisel "/tmp/capture.scap" "topconns.lua" "/tmp/top_connection.txt"
-      ${{github.action_path}}/stop/src/run_sysdig.sh chisel "/tmp/capture.scap" "topprocs_net.lua" "/tmp/topprocs_net.txt"
+      ${{github.action_path}}/src/run_sysdig.sh chisel "/tmp/capture.scap" "udp_extract.lua" "/tmp/udp_extract.txt"
+      ${{github.action_path}}/src/run_sysdig.sh chisel "/tmp/capture.scap" "topconns.lua" "/tmp/top_connection.txt"
+      ${{github.action_path}}/src/run_sysdig.sh chisel "/tmp/capture.scap" "topprocs_net.lua" "/tmp/topprocs_net.txt"
 
   - name: Extract DNS domains
     shell: bash
     run: |
       DNS_FILTER="evt.type in (recvmsg,read,recv,recvfrom) and fd.rport=53 and fd.l4proto=udp"
       DNS_OUTPUT="%evt.buffer"
-      ${{github.action_path}}/stop/src/run_sysdig.sh filter "/tmp/capture.scap" "$DNS_FILTER" "$DNS_OUTPUT" "/tmp/buffers.txt"
+      ${{github.action_path}}/src/run_sysdig.sh filter "/tmp/capture.scap" "$DNS_FILTER" "$DNS_OUTPUT" "/tmp/buffers.txt"
       cat /tmp/buffers.txt | grep -o -E "[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,})" | grep -E -v "NULL" | grep -E -v "\->" | grep -E -v "evt.buffer" | sort | uniq > /tmp/dns_extract.txt
       echo "Extracted DNS domains" && cat /tmp/dns_extract.txt
   
@@ -91,7 +91,7 @@ runs:
     run: |
       CONTAINER_FILTER="evt.type=container"
       CONTAINER_OUTPUT="%container.name,%container.image.repository"
-      ${{github.action_path}}/stop/src/run_sysdig.sh filter "/tmp/capture.scap" "$CONTAINER_FILTER" "$CONTAINER_OUTPUT" "/tmp/containers.txt"
+      ${{github.action_path}}/src/run_sysdig.sh filter "/tmp/capture.scap" "$CONTAINER_FILTER" "$CONTAINER_OUTPUT" "/tmp/containers.txt"
       sort -u -o /tmp/containers.txt /tmp/containers.txt
 
   - name: Retrieve Job Info using GitHub API
@@ -123,13 +123,13 @@ runs:
         else
           echo "Printing triggered rules in Job summary"
           echo "# Falco Events" >> $GITHUB_STEP_SUMMARY
-          python3 ${{github.action_path}}/stop/src/falco_events_to_md.py /tmp/falco_events.json /tmp/steps.json >> $GITHUB_STEP_SUMMARY
+          python3 ${{github.action_path}}/src/falco_events_to_md.py /tmp/falco_events.json /tmp/steps.json >> $GITHUB_STEP_SUMMARY
         fi
       fi
 
       # Connections
       echo "# Top Connections" >> $GITHUB_STEP_SUMMARY
-      python3 ${{github.action_path}}/stop/src/capture_to_md.py /tmp/top_connection.txt >> $GITHUB_STEP_SUMMARY
+      python3 ${{github.action_path}}/src/capture_to_md.py /tmp/top_connection.txt >> $GITHUB_STEP_SUMMARY
       echo "" >> $GITHUB_STEP_SUMMARY
 
   - name: Push profile to repository
@@ -151,8 +151,7 @@ runs:
 
       echo "$GITHUB_WORKFLOW"
       
-      #${{github.action_path}}/push_profile.sh
-      ${{github.action_path}}/stop/src/push_profile.sh
+      ${{github.action_path}}/src/push_profile.sh
 
   - name: Save captures and events on S3 bucket
     if: ${{ inputs.captures == 'true'}}
