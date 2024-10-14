@@ -14,7 +14,7 @@ runs:
     run: |
       echo "Running Sysdig"
 
-      IGNORE_FILTER_FOLDER=${{github.action_path}}/.sysdig
+      IGNORE_FILTER_FOLDER=${{github.action_path}}/start/src
       CONFIG_FILE="${{github.action_path}}/${{inputs.config_file}}"
       echo "$CONFIG_FILE"
 
