@@ -12,29 +12,37 @@ runs:
   - name: Sysdig
     shell: bash
     run: |
-      echo "Running Sysdig"
-
       IGNORE_FILTER_FOLDER=${{github.action_path}}/start/src
       CONFIG_FILE="${{github.action_path}}/${{inputs.config_file}}"
-      echo "$CONFIG_FILE"
 
       if [ ! -e "$CONFIG_FILE" ]; then
         echo "Config File does not exist."
         exit 1
       fi
 
-      ##create filters
+      echo "Creating ignore filters"
+
+      echo "Ignored IPs:"
       IGNORE_IPS_FILTER="and not fd.sip in ( $(jq -r -f $IGNORE_FILTER_FOLDER/ignore_ips.jq $CONFIG_FILE) ) "
       echo $IGNORE_IPS_FILTER
+
+      echo "Ignored Folders:"
       IGNORE_FOLDERS_FILTER="and not fd.directory in ( $(jq -r -f $IGNORE_FILTER_FOLDER/ignore_folders.jq $CONFIG_FILE) ) "
       echo $IGNORE_FOLDERS_FILTER
+
+      echo "Ignored Files:"
       IGNORE_FILES_FILTER="and not fd.name in ( $(jq -r -f $IGNORE_FILTER_FOLDER/ignore_files.jq $CONFIG_FILE) ) "
       echo $IGNORE_FILES_FILTER
+
+      echo "Ignored Syscalls:"
       IGNORE_SYSCALLS_FILTER="and not evt.type in ( $(jq -r -f $IGNORE_FILTER_FOLDER/ignore_syscalls.jq $CONFIG_FILE) ) "
       echo $IGNORE_SYSCALLS_FILTER
+
+      echo "Ignored Processes:"
       IGNORE_PROCESSES_FILTER="and not proc.name in ( $(jq -r  -f $IGNORE_FILTER_FOLDER/ignore_processes.jq $CONFIG_FILE) ) "
       echo $IGNORE_PROCESSES_FILTER
 
+      echo "Creating Sysdig container"
       docker run --rm -d --name sysdig --privileged \
       -v /var/run/docker.sock:/host/var/run/docker.sock \
       -v /dev:/host/dev -v /proc:/host/proc:ro \
