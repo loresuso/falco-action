@@ -2,13 +2,13 @@ name: 'Falco Action Stop'
 description: 'Run Falco in a GitHub Action job to detect suspicious activity.'
 author: 'The Falco Authors'
 inputs:
-  rule_file:
+  custom_rule_file:
     description: 'Custom rule file'
     required: false
   profile_dir:
     description: 'Profile dir in repository (Default .sysdig)'
     default: '.sysdig'
-  captures:
+  save_capture:
     description: "Save Files on S3?"
     type: boolean
     default: false
@@ -26,8 +26,8 @@ runs:
     shell: bash
     run: |
       MOUNT_CUSTOM_RULE=""
-      if [[ -f ${{inputs.rule_file}} ]]; then
-        MOUNT_CUSTOM_RULE="-v ${{inputs.rule_file}}:/etc/falco/rules.d/custom_rules.yaml"
+      if [[ -f ${{inputs.custom_rule_file}} ]]; then
+        MOUNT_CUSTOM_RULE="-v ${{inputs.custom_rule_file}}:/etc/falco/rules.d/custom_rules.yaml"
       fi
 
       docker run --rm --name falco --privileged \
@@ -154,7 +154,7 @@ runs:
       ${{github.action_path}}/src/push_profile.sh
 
   - name: Save captures and events on S3 bucket
-    if: ${{ inputs.captures == 'true'}}
+    if: ${{ inputs.save_capture == 'true'}}
     shell: bash
     run: |
         sudo apt-get update
