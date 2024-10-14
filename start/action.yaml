@@ -1,6 +1,6 @@
 name: 'Falco Action'
 description: 'Run Falco in a GitHub action'
-author: 'darryk10'
+author: 'The Falco Authors'
 inputs:
   config_file:
     description: 'start action config file'
