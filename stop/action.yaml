@@ -127,7 +127,27 @@ runs:
         fi
       fi
 
-      # Connections
+      # Processes
+      echo "# Processes" >> $GITHUB_STEP_SUMMARY
+      python3 ${{github.action_path}}/src/json_to_md.py /tmp/proc.txt >> $GITHUB_STEP_SUMMARY
+
+      # Written files
+      echo "# Written Files" >> $GITHUB_STEP_SUMMARY
+      python3 ${{github.action_path}}/src/json_to_md.py /tmp/files_written.txt >> $GITHUB_STEP_SUMMARY
+
+      # Contacted IPs
+      echo "# Contacted IPs" >> $GITHUB_STEP_SUMMARY
+      python3 ${{github.action_path}}/src/capture_to_md.py /tmp/outbound.txt >> $GITHUB_STEP_SUMMARY
+
+      # DNS
+      echo "# Contacted DNS Domains" >> $GITHUB_STEP_SUMMARY
+      python3 ${{github.action_path}}/src/capture_to_md.py /tmp/dns_extract.txt >> $GITHUB_STEP_SUMMARY
+
+      # Containers
+      echo "# Containers" >> $GITHUB_STEP_SUMMARY
+      python3 ${{github.action_path}}/src/capture_to_md.py /tmp/containers.txt >> $GITHUB_STEP_SUMMARY
+
+      # Top Connections
       echo "# Top Connections" >> $GITHUB_STEP_SUMMARY
       python3 ${{github.action_path}}/src/capture_to_md.py /tmp/top_connection.txt >> $GITHUB_STEP_SUMMARY
       echo "" >> $GITHUB_STEP_SUMMARY
