@@ -17,6 +17,10 @@ inputs:
     description: "Save Files on S3?"
     type: boolean
     default: false
+  verbose:
+    description: "Enable verbose logs"
+    type: boolean
+    default: false
 runs:
   using: 'composite'
   steps:
@@ -32,6 +36,7 @@ runs:
     run: |
       MOUNT_CUSTOM_RULE=""
       if [[ -f "${{inputs.custom_rule_file}}" ]]; then
+        echo "Loading custom rules from ${{inputs.custom_rule_file}}"
         MOUNT_CUSTOM_RULE="-v ${{inputs.custom_rule_file}}:/etc/falco/rules.d/custom_rules.yaml"
       fi
 

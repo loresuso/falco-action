@@ -5,8 +5,6 @@ set -o pipefail
 pr_message="[Falco](https://falco.org) has detected a deviation from normal behavior of the workflow.
 Review the changes in this PR and accept it in order to establish a new baseline."
 
-
-
 git config --global user.email "oss@falco.com"
 git config --global user.name "Falco action"
 git fetch --all

@@ -3,9 +3,13 @@ description: 'Run Falco in a GitHub action'
 author: 'The Falco Authors'
 inputs:
   config_file:
-    description: 'start action config file'
+    description: 'Start action with a config file'
     required: false
     default: 'src/ignore.config'
+  verbose:
+    description: 'Enable verbose logs'
+    type: boolean
+    default: false
 runs:
   using: 'composite'
   steps:

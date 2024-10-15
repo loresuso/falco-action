@@ -51,6 +51,15 @@ The job summary will give you information about:
     save_capture:
 ```
 
+## Permissions
+
+This GitHub actions needs the following permissions to be set on the GitHub Token:
+
+- [required] To correlate Falco events to each of the job steps, the endpoint `https://api.github.com/repos/$REPO/actions/runs/$RUN_ID/jobs` is contacted. 
+- [optional] To write the Falco profile to the repository that uses this GitHub Action, a write access to the repo is needed
+
+todo(loresuso): list properly all the required permissions that the token is using!!!
+
 ## Scenario
 ```
 ```
