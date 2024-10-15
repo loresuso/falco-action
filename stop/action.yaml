@@ -5,6 +5,7 @@ inputs:
   custom_rule_file:
     description: 'Custom rule file'
     required: false
+    default: ''
   profile_dir:
     description: 'Profile dir in repository (Default .sysdig)'
     default: '.sysdig'
@@ -26,7 +27,7 @@ runs:
     shell: bash
     run: |
       MOUNT_CUSTOM_RULE=""
-      if [[ -f ${{inputs.custom_rule_file}} ]]; then
+      if [[ -f "${{inputs.custom_rule_file}}" ]]; then
         MOUNT_CUSTOM_RULE="-v ${{inputs.custom_rule_file}}:/etc/falco/rules.d/custom_rules.yaml"
       fi
 
