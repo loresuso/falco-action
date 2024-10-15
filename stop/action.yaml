@@ -6,6 +6,10 @@ inputs:
     description: 'Custom rule file'
     required: false
     default: ''
+  profile_enabled: 
+    description: 'Enable profiling. Requires write access to repository'
+    type: boolean 
+    default: false
   profile_dir:
     description: 'Profile dir in repository (Default .sysdig)'
     default: '.sysdig'
@@ -154,6 +158,7 @@ runs:
       echo "" >> $GITHUB_STEP_SUMMARY
 
   - name: Push profile to repository
+    if: ${{ inputs.profile_enabled == 'true'}}
     shell: bash
     run: |
       PROFILE_PATH="$GITHUB_WORKSPACE/${{inputs.profile_dir}}"
@@ -169,8 +174,6 @@ runs:
         cp /tmp/hashes.txt .sysdig/profile_hashes.txt
         cp /tmp/containers.txt .sysdig/profile_containers.txt
       fi
-
-      echo "$GITHUB_WORKFLOW"
       
       ${{github.action_path}}/src/push_profile.sh
 
