@@ -11,8 +11,8 @@ inputs:
     type: boolean 
     default: false
   profile_dir:
-    description: 'Profile dir in repository (Default .sysdig)'
-    default: '.sysdig'
+    description: 'Profile dir in repository (Default .falco)'
+    default: '.falco'
   save_capture:
     description: "Save Files on S3?"
     type: boolean
@@ -166,14 +166,15 @@ runs:
       if [ ! -d "PROFILE_PATH" ]; then
         echo "Creating profile dir"
         mkdir -p "./${{inputs.profile_dir}}"
-        ls -la .sysdig/
-        cp /tmp/proc.txt .sysdig/profile_proc.txt
-        cp /tmp/files_written.txt .sysdig/profile_files_written.txt
-        cp /tmp/outbound.txt .sysdig/profile_conn.txt
-        cp /tmp/dns_extract.txt .sysdig/profile_dns.txt
-        cp /tmp/hashes.txt .sysdig/profile_hashes.txt
-        cp /tmp/containers.txt .sysdig/profile_containers.txt
       fi
+      
+      ls -la ${{inputs.profile_dir}}/
+      cp /tmp/proc.txt ${{inputs.profile_dir}}/profile_proc.txt
+      cp /tmp/files_written.txt ${{inputs.profile_dir}}/profile_files_written.txt
+      cp /tmp/outbound.txt ${{inputs.profile_dir}}/profile_conn.txt
+      cp /tmp/dns_extract.txt ${{inputs.profile_dir}}/profile_dns.txt
+      cp /tmp/hashes.txt ${{inputs.profile_dir}}/profile_hashes.txt
+      cp /tmp/containers.txt ${{inputs.profile_dir}}/profile_containers.txt
       
       ${{github.action_path}}/src/push_profile.sh
 
