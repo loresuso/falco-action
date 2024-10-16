@@ -1,0 +1,31 @@
+- required_engine_version: 0.31.0
+
+- rule: Source Code Overwrite
+  desc: >
+    Detect the overwrite of source code during a build process. To be enabled only on workflows job that requires it.
+    The rule is based on the assumption that the common directory for checking out the repository is "/hom/runner/work/"
+  condition: >
+    open_write and fd.directory startswith "/home/runner/work/"
+  output: A source code file %fd.name was overwritten by process %proc.name (file=%fd.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty %container.info)
+  priority: WARNING
+  tags: [CI/CD]
+
+- rule: Possible Workflow File Overwrite
+  desc: >
+    Detect the overwrite of a workflow file. To be enabled only where the job is not expected to change workflow files.
+    The rule is based on the assumption that the common directory for checking out the repository is "/hom/runner/work/"
+  condition: >
+    open_write and fd.directory startswith "/home/runner/work/" and fd.name contains ".github/workflows/"
+  output: A source code file %fd.name was overwritten by process %proc.name (file=%fd.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] evt_type=%evt.type user=%user.name user_uid=%user.uid user_loginuid=%user.loginuid process=%proc.name proc_exepath=%proc.exepath parent=%proc.pname command=%proc.cmdline terminal=%proc.tty container_image=%container.image.repository)
+  priority: WARNING
+  tags: [CI/CD]
+
+- rule: Git Pushing to Repository
+  desc: >
+    Detect the use of git tool to push to a repository. To be enabled only where the job is not expected to push any repository.
+  condition: >
+    spawned_process and proc.name="git" and proc.cmdline contains "push"
+  output: A process %proc.name is pushing to a repository (process=%proc.name proc_exepath=%proc.exepath gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] command=%proc.cmdline terminal=%proc.tty container_image=%container.image.repository)
+  priority: WARNING
+  tags: [CI/CD]
+
