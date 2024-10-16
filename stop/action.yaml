@@ -51,6 +51,8 @@ runs:
 
   - name: Extract outbound connections
     shell: bash
+    env:
+      VERBOSE: ${{ inputs.verbose }}
     run: |
       OUTBOUND_FILTER="(((evt.type = connect and evt.dir=<) or (evt.type in (sendto,sendmsg,sendmmsg) and evt.dir=< and fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and (fd.typechar = 4 or fd.typechar = 6) and (fd.ip != \"0.0.0.0\" and fd.net != \"127.0.0.0/8\" and not fd.snet in (\"10.0.0.0/8\", \"172.16.0.0/12\", \"192.168.0.0/16\"))) and not proc.name in (pythonist, dragent, ssm-agent-worke) and not proc.pname in (eic_curl_author, dhclient-script)" 
       OUTBOUND_OUTPUT="%fd.sip,%fd.sport,%proc.name,%proc.exepath,%user.name"
@@ -58,6 +60,8 @@ runs:
 
   - name: Extract written files
     shell: bash
+    env:
+      VERBOSE: ${{ inputs.verbose }}
     run: |
       FILE_WRITTEN_FILTER="evt.type in (open,openat,openat2) and evt.is_open_write=true and fd.typechar=\"f\" and fd.num>=0 and ( not fd.name startswith \"/var/lib/docker/\" and not fd.name startswith \"/home/runner/work/_temp/_runner_file_commands/\") and not (fd.name startswith \"/home/runner/runners/\" and proc.exepath endswith \"/bin/Runner.Worker\" and proc.pexepath endswith \"/bin/Runner.Listener\")"
       FILE_WRITTEN_OUTPUT="%fd.name,%proc.name,%proc.exepath,%proc.pexepath,%user.name"
@@ -65,6 +69,8 @@ runs:
 
   - name: Extract processes information
     shell: bash
+    env:
+      VERBOSE: ${{ inputs.verbose }}
     run: |
       PROC_FILTER="evt.type in (execve, execveat) and evt.dir=< and evt.arg.res=0"
       PROC_FILTER_OUTPUT="%proc.name,%proc.exepath,%proc.pname,%proc.pexepath,%user.name"
@@ -72,6 +78,8 @@ runs:
 
   - name: Extract chisels information for summary
     shell: bash
+    env:
+      VERBOSE: ${{ inputs.verbose }}
     run: |
       ${{github.action_path}}/src/run_sysdig.sh chisel "/tmp/capture.scap" "udp_extract.lua" "/tmp/udp_extract.txt"
       ${{github.action_path}}/src/run_sysdig.sh chisel "/tmp/capture.scap" "topconns.lua" "/tmp/top_connection.txt"
@@ -79,6 +87,8 @@ runs:
 
   - name: Extract DNS domains
     shell: bash
+    env:
+      VERBOSE: ${{ inputs.verbose }}
     run: |
       DNS_FILTER="evt.type in (recvmsg,read,recv,recvfrom) and fd.rport=53 and fd.l4proto=udp"
       DNS_OUTPUT="%evt.buffer"
@@ -90,6 +100,8 @@ runs:
   
   - name: Extract executables' hash
     shell: bash
+    env:
+      VERBOSE: ${{ inputs.verbose }}
     run: |      
       cat /tmp/proc.txt| jq '."proc.exepath"' | tr -d "\"" | while read -r file; do
         if [ -f "$file" ]; then
@@ -102,6 +114,8 @@ runs:
   
   - name: Extract docker container images
     shell: bash
+    env:
+      VERBOSE: ${{ inputs.verbose }}
     run: |
       CONTAINER_FILTER="evt.type=container"
       CONTAINER_OUTPUT="%container.name,%container.image.repository"

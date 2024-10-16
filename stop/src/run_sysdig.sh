@@ -70,7 +70,11 @@ if [ "$filter_or_chisel" == "filter" ]; then
       sudo chmod 666 "$output_file"
       sort -u -o "$output_file" "$output_file"
       echo "Output file saved at $output_file"
-      cat "$output_file"
+
+      if [ "$VERBOSE" == "true" ]; then
+            echo "Output file content:"
+            cat "$output_file"
+      fi
 
 elif [ "$filter_or_chisel" == "chisel" ]; then
       # Ensure all the required arguments are provided
