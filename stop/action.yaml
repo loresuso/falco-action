@@ -1,5 +1,5 @@
 name: 'Falco Action Stop'
-description: 'Run Falco in a GitHub Action job to detect suspicious activity.'
+description: 'Run Falco in a GitHub Action'
 author: 'The Falco Authors'
 inputs:
   custom_rule_file:
