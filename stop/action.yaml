@@ -105,11 +105,15 @@ runs:
     run: |      
       cat /tmp/proc.txt| jq '."proc.exepath"' | tr -d "\"" | while read -r file; do
         if [ -f "$file" ]; then
-            sha256sum "$file"
+            line=$(sha256sum "$file")
+            sha=$(echo "$line" | awk '{print $1}')
+            file=$(echo "$line" | awk '{print $2}')
+            echo "{ \"sha256\": \"$sha\", \"filename\": \"$file\" }"
         else
             echo "Warning: File $file does not exist anymore when extracting its SHA256 hash" >&2
         fi 
       done > /tmp/hashes.txt
+
       sort -u -o /tmp/hashes.txt /tmp/hashes.txt
   
   - name: Extract docker container images
@@ -176,6 +180,10 @@ runs:
       # Containers
       echo "# Containers" >> $GITHUB_STEP_SUMMARY
       python3 ${{github.action_path}}/src/json_to_md.py /tmp/containers.txt >> $GITHUB_STEP_SUMMARY
+
+      # Hashes
+      echo "# Executable Hashes" >> $GITHUB_STEP_SUMMARY
+      python3 ${{github.action_path}}/src/json_to_md.py /tmp/hashes.txt >> $GITHUB_STEP_SUMMARY
 
       # Top Connections
       echo "# Top Connections" >> $GITHUB_STEP_SUMMARY
