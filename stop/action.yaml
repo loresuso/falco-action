@@ -93,10 +93,13 @@ runs:
       DNS_FILTER="evt.type in (recvmsg,read,recv,recvfrom) and fd.rport=53 and fd.l4proto=udp"
       DNS_OUTPUT="%evt.buffer"
       ${{github.action_path}}/src/run_sysdig.sh filter "/tmp/capture.scap" "$DNS_FILTER" "$DNS_OUTPUT" "/tmp/buffers.txt"
-      cat /tmp/buffers.txt | grep -o -E "[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,})" | grep -E -v "NULL" | grep -E -v "\->" | grep -E -v "evt.buffer" | sort | uniq > /tmp/dns_extract.txt
+      cat /tmp/buffers.txt | grep -o -E "[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,})" | grep -E -v "NULL" | grep -E -v "ns." | grep -E -v "\->" | grep -E -v "evt.buffer" | sort | uniq > /tmp/dns_extract.txt
       if [[ "${{ inputs.verbose }}" == "true" ]]; then
         echo "Extracted DNS domains" && cat /tmp/dns_extract.txt
       fi
+      while read -r line; do
+        echo "{ \"domain\": \"$line\" }"
+      done < /tmp/dns_extract.txt > /tmp/dns_extract_json.txt
   
   - name: Extract executables' hash
     shell: bash
@@ -174,8 +177,8 @@ runs:
       python3 ${{github.action_path}}/src/json_to_md.py /tmp/outbound.txt >> $GITHUB_STEP_SUMMARY
 
       # DNS
-      # echo "# Contacted DNS Domains" >> $GITHUB_STEP_SUMMARY
-      # python3 ${{github.action_path}}/src/json_to_md.py /tmp/dns_extract.txt >> $GITHUB_STEP_SUMMARY
+      echo "# Contacted DNS Domains" >> $GITHUB_STEP_SUMMARY
+      python3 ${{github.action_path}}/src/json_to_md.py /tmp/dns_extract_json.txt >> $GITHUB_STEP_SUMMARY
 
       # Containers
       echo "# Containers" >> $GITHUB_STEP_SUMMARY
@@ -205,7 +208,7 @@ runs:
       cp /tmp/proc.txt ${{inputs.profile_dir}}/profile_proc.txt
       cp /tmp/files_written.txt ${{inputs.profile_dir}}/profile_files_written.txt
       cp /tmp/outbound.txt ${{inputs.profile_dir}}/profile_conn.txt
-      cp /tmp/dns_extract.txt ${{inputs.profile_dir}}/profile_dns.txt
+      cp /tmp/dns_extract_json.txt ${{inputs.profile_dir}}/profile_dns.txt
       cp /tmp/hashes.txt ${{inputs.profile_dir}}/profile_hashes.txt
       cp /tmp/containers.txt ${{inputs.profile_dir}}/profile_containers.txt
       
