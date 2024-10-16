@@ -1,8 +1,8 @@
 import argparse
 from datetime import datetime
-import logging
 import json
 import re
+import sys
 
 def markdown_escape(text):
     # List of Markdown special characters to escape
@@ -55,8 +55,8 @@ def main():
             try:
                 obj = json.loads(line)
             except:
-                print(f"Error parsing JSON: {line}")
-                print("Exiting ...")
+                print(f"Error parsing JSON: {line}", file=sys.stderr)
+                print("Exiting ...", file=sys.stderr)
                 exit(1)
 
             try:
@@ -71,7 +71,8 @@ def main():
                 completed_at = datetime.fromisoformat(str(obj["steps"]["completed_at"]).replace("Z", "+00:00"))
                 timeline.append({'step_name': step_name, 'started_at': started_at, 'completed_at': completed_at})
             except Exception as e:
-                logging.error(f"Error parsing correlation data: {e}")
+                print(f"Error parsing correlation data: {e}", file=sys.stderr)
+                print("Exiting ...", file=sys.stderr)
                 continue
 
     # Append the Markdown table header
@@ -82,8 +83,8 @@ def main():
         try:
             obj = json.loads(line)
         except:
-            print(f"Error parsing JSON: {line}")
-            print("Exiting ...")
+            print(f"Error parsing JSON: {line}", file=sys.stderr)
+            print("Exiting ...", file=sys.stderr)
             exit(1)
 
         # Append formatted Markdown row
