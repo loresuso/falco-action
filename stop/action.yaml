@@ -36,7 +36,9 @@ runs:
     run: |
       MOUNT_CUSTOM_RULE=""
       if [[ -f "${{inputs.custom_rule_file}}" ]]; then
-        echo "Loading custom rules from ${{inputs.custom_rule_file}}"
+        if [ "${{ inputs.verbose }}" = "true" ]; then
+          echo "Loading custom rules from ${{inputs.custom_rule_file}}"
+        fi
         MOUNT_CUSTOM_RULE="-v ${{inputs.custom_rule_file}}:/etc/falco/rules.d/custom_rules.yaml"
       fi
 
@@ -82,7 +84,9 @@ runs:
       DNS_OUTPUT="%evt.buffer"
       ${{github.action_path}}/src/run_sysdig.sh filter "/tmp/capture.scap" "$DNS_FILTER" "$DNS_OUTPUT" "/tmp/buffers.txt"
       cat /tmp/buffers.txt | grep -o -E "[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,})" | grep -E -v "NULL" | grep -E -v "\->" | grep -E -v "evt.buffer" | sort | uniq > /tmp/dns_extract.txt
-      echo "Extracted DNS domains" && cat /tmp/dns_extract.txt
+      if [[ "${{ inputs.verbose }}" == "true" ]]; then
+        echo "Extracted DNS domains" && cat /tmp/dns_extract.txt
+      fi
   
   - name: Extract executables' hash
     shell: bash
@@ -91,7 +95,7 @@ runs:
         if [ -f "$file" ]; then
             sha256sum "$file"
         else
-            echo "Warning: File $file does not exist" >&2
+            echo "Warning: File $file does not exist anymore when extracting its SHA256 hash" >&2
         fi 
       done > /tmp/hashes.txt
       sort -u -o /tmp/hashes.txt /tmp/hashes.txt
@@ -119,7 +123,9 @@ runs:
       echo "Job details:"
       jq -c '.jobs[] | {job_id: .id, job_name: .name, steps: .steps[] | {name: .name, started_at: .started_at, completed_at: .completed_at, status: .status}}' jobs.json > steps.json
 
-      cat steps.json
+      if [[ "${{ inputs.verbose }}" == "true" ]]; then
+        cat steps.json
+      fi
       mv steps.json /tmp/steps.json
       
   - name: Build summary

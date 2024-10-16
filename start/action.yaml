@@ -25,27 +25,35 @@ runs:
         exit 1
       fi
 
+      if [[ "${{ inputs.verbose }}" == "true" ]]; then
+        echo "Config File:"
+        cat $CONFIG_FILE
+      fi
+
       echo "Creating ignore filters"
-
-      echo "Ignored IPs:"
       IGNORE_IPS_FILTER="and not fd.sip in ( $(jq -r -f $IGNORE_FILTER_FOLDER/ignore_ips.jq $CONFIG_FILE) ) "
-      echo $IGNORE_IPS_FILTER
-
-      echo "Ignored Folders:"
       IGNORE_FOLDERS_FILTER="and not fd.directory in ( $(jq -r -f $IGNORE_FILTER_FOLDER/ignore_folders.jq $CONFIG_FILE) ) "
-      echo $IGNORE_FOLDERS_FILTER
-
-      echo "Ignored Files:"
       IGNORE_FILES_FILTER="and not fd.name in ( $(jq -r -f $IGNORE_FILTER_FOLDER/ignore_files.jq $CONFIG_FILE) ) "
-      echo $IGNORE_FILES_FILTER
-
-      echo "Ignored Syscalls:"
       IGNORE_SYSCALLS_FILTER="and not evt.type in ( $(jq -r -f $IGNORE_FILTER_FOLDER/ignore_syscalls.jq $CONFIG_FILE) ) "
-      echo $IGNORE_SYSCALLS_FILTER
-
-      echo "Ignored Processes:"
       IGNORE_PROCESSES_FILTER="and not proc.name in ( $(jq -r  -f $IGNORE_FILTER_FOLDER/ignore_processes.jq $CONFIG_FILE) ) "
-      echo $IGNORE_PROCESSES_FILTER
+
+
+      if [[ "${{ inputs.verbose }}" == "true" ]]; then
+        echo "Ignored IPs:"
+        echo $IGNORE_IPS_FILTER
+
+        echo "Ignored Folders:"
+        echo $IGNORE_FOLDERS_FILTER
+
+        echo "Ignored Files:"
+        echo $IGNORE_FILES_FILTER
+
+        echo "Ignored Syscalls:"
+        echo $IGNORE_SYSCALLS_FILTER
+
+        echo "Ignored Processes:"
+        echo $IGNORE_PROCESSES_FILTER
+      fi
 
       echo "Creating Sysdig container"
       docker run --rm -d --name sysdig --privileged \
@@ -60,5 +68,8 @@ runs:
 
       # Ensure Sysdig container is running
       sleep 10 # todo(loresuso): replace with a more robust check
-      docker ps -a 
-      docker logs sysdig
+
+      if [[ "${{ inputs.verbose }}" == "true" ]]; then
+        docker ps -a
+        docker logs sysdig
+      fi
