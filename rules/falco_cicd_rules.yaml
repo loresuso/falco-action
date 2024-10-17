@@ -47,3 +47,26 @@
   priority: WARNING
   tags: [CI/CD]
 
+- rule: Suspicious Process Reading GitHub Token
+  desc: >
+    Detect a process reading a GitHub token from the local git config. GitHub tokens are sensitive information that can be exfiltrated and used to access the repository.
+  condition: >
+    open_read and fd.name startswith "/home/runner/work/.git" and fd.name contains "config" and not proc.name = "git"
+  output: A process %proc.name is reading GitHub token (file=%fd.name process=%proc.name proc_exepath=%proc.exepath gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] command=%proc.cmdline terminal=%proc.tty container_image=%container.image.repository)
+  priority: WARNING
+  tags: [CI/CD]
+
+- rule: Grep Looking for GitHub Secrets
+  desc: >
+    Detect the use of grep tool to search for GitHub secrets.
+  condition: >
+    spawned_process and proc.name="grep" and 
+    (proc.cmdline contains "ghp_" or
+    proc.cmdline contains "gho_" or
+    proc.cmdline contains "ghu_" or
+    proc.cmdline contains "ghs_" or
+    proc.cmdline contains "ghr_")
+  output: Grep is searching for GitHub secrets (process=%proc.name proc_exepath=%proc.exepath gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] command=%proc.cmdline terminal=%proc.tty container_image=%container.image.repository)
+  priority: WARNING
+  tags: [CI/CD]
+
