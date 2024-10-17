@@ -279,7 +279,7 @@ runs:
         cp /tmp/containers.txt ${{inputs.profile_dir}}/profile_containers.txt
       fi
       
-      ${{github.action_path}}/src/push_profile.sh
+      ${{github.action_path}}/src/push_profile.sh ${{inputs.profile_dir}}
 
   - name: Save captures and events on S3 bucket
     if: ${{ inputs.save_capture == 'true' && env.AWS_ACCESS_KEY_ID != '' && env.AWS_SECRET_ACCESS_KEY != '' && env.S3_BUCKET != ''}}
