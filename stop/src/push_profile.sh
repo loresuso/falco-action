@@ -5,6 +5,8 @@ profile_dir="$1"
 
 pr_message="[Falco](https://falco.org) has detected a deviation from normal behavior of the workflow.
 Review the changes in this PR and accept it in order to establish a new baseline."
+PR_DATE=$(date +"%Y%m%d_%H%M%S")
+BRANCH_NAME="sysdig-profile-update-$PR_DATE"
 
 git config --global user.email "oss@falco.com"
 git config --global user.name "Falco action"
