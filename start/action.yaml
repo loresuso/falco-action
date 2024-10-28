@@ -2,7 +2,7 @@ name: 'Falco Action'
 description: 'Run Falco in a GitHub action'
 author: 'The Falco Authors'
 inputs:
-  config_file:
+  config-file:
     description: 'Start action with a config file'
     required: false
     default: 'src/syscall_ignore.config'
@@ -17,7 +17,7 @@ runs:
     shell: bash
     run: |
       IGNORE_FILTER_FOLDER=${{github.action_path}}/src
-      CONFIG_FILE="${{github.action_path}}/${{inputs.config_file}}"
+      CONFIG_FILE="${{github.action_path}}/${{inputs.config-file}}"
 
       if [ ! -e "$CONFIG_FILE" ]; then
         echo "Config File does not exist."

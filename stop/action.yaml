@@ -2,23 +2,23 @@ name: 'Falco Action Stop'
 description: 'Run Falco in a GitHub Action'
 author: 'The Falco Authors'
 inputs:
-  custom_rule_file:
+  custom-rule-file:
     description: 'Custom rule file'
     required: false
     default: ''
-  filters_config:
+  filters-config:
     description: 'Filter configuration file'
     required: false
     default: 'src/filters.config'
-  save_capture:
+  save-capture:
     description: "Save Files on S3?"
     type: boolean
     default: false
-  openAI_model:
+  openai-model:
     description: "Open AI model to use for summary"
     type: sting
     default: "gpt-3.5-turbo"
-  openAI_user_prompt:
+  openai-user-prompt:
     description: "Message to send to OpenAI"
     type: string
   verbose:
@@ -39,11 +39,11 @@ runs:
     shell: bash
     run: |
       MOUNT_CUSTOM_RULE=""
-      if [[ -f "${{inputs.custom_rule_file}}" ]]; then
+      if [[ -f "${{inputs.custom-rule-file}}" ]]; then
         if [ "${{ inputs.verbose }}" = "true" ]; then
-          echo "Loading custom rules from ${{inputs.custom_rule_file}}"
+          echo "Loading custom rules from ${{inputs.custom-rule-file}}"
         fi
-        MOUNT_CUSTOM_RULE="-v ${{inputs.custom_rule_file}}:/etc/falco/rules.d/custom_rules.yaml"
+        MOUNT_CUSTOM_RULE="-v ${{inputs.custom-rule-file}}:/etc/falco/rules.d/custom_rules.yaml"
       fi
 
       docker run --rm --name falco --privileged \
@@ -59,7 +59,7 @@ runs:
       VERBOSE: ${{ inputs.verbose }}
     run: |
       OUTBOUND_FILTER="(((evt.type = connect and evt.dir=<) or (evt.type in (sendto,sendmsg,sendmmsg) and evt.dir=< and fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and (fd.typechar = 4 or fd.typechar = 6) and (fd.ip != \"0.0.0.0\" and fd.net != \"127.0.0.0/8\" and not fd.snet in (\"10.0.0.0/8\", \"172.16.0.0/12\", \"192.168.0.0/16\")))" 
-      CUSTOM_FILTERS=$(jq -r '.outbound_connections // [] | .[] | "and not (\(.condition) )"' "${{github.action_path}}/${{inputs.filters_config}}" | sed "s/'/\"/g" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+      CUSTOM_FILTERS=$(jq -r '.outbound_connections // [] | .[] | "and not (\(.condition) )"' "${{github.action_path}}/${{inputs.filters-config}}" | sed "s/'/\"/g" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
       if [ "${{ inputs.verbose }}" = "true" ]; then
         echo "Custom filters: $CUSTOM_FILTERS"
       fi
@@ -72,7 +72,7 @@ runs:
       VERBOSE: ${{ inputs.verbose }}
     run: |
       FILE_WRITTEN_FILTER="evt.type in (open,openat,openat2) and evt.is_open_write=true and fd.typechar=\"f\" and fd.num>=0"
-      CUSTOM_FILTERS=$(jq -r '.written_files // [] | .[] | "and not (\(.condition) )"' "${{github.action_path}}/${{inputs.filters_config}}" | sed "s/'/\"/g" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+      CUSTOM_FILTERS=$(jq -r '.written_files // [] | .[] | "and not (\(.condition) )"' "${{github.action_path}}/${{inputs.filters-config}}" | sed "s/'/\"/g" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
       if [ "${{ inputs.verbose }}" = "true" ]; then
         echo "Custom filters: $CUSTOM_FILTERS"
       fi
@@ -85,7 +85,7 @@ runs:
       VERBOSE: ${{ inputs.verbose }}
     run: |
       PROC_FILTER="evt.type in (execve, execveat) and evt.dir=< and evt.arg.res=0"
-      CUSTOM_FILTERS=$(jq -r '.processes // [] | .[] | "and not (\(.condition) )"' "${{github.action_path}}/${{inputs.filters_config}}" | sed "s/'/\"/g" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+      CUSTOM_FILTERS=$(jq -r '.processes // [] | .[] | "and not (\(.condition) )"' "${{github.action_path}}/${{inputs.filters-config}}" | sed "s/'/\"/g" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
       if [ "${{ inputs.verbose }}" = "true" ]; then
         echo "Custom filters: $CUSTOM_FILTERS"
       fi
@@ -264,10 +264,10 @@ runs:
         echo "Installing python dependencies"
         python3 -m pip install -r ${{github.action_path}}/src/integrations/openai/requirements.txt
         echo "Calling OpenAI APIs for summary"
-        if ${{inputs.openAI_user_prompt == ''}}; then
-          python3 ${{github.action_path}}/src/integrations/openai/create_summary.py /tmp/report_output.md --model "${{inputs.openAI_model}}" >> $GITHUB_STEP_SUMMARY
+        if ${{inputs.openai-user-prompt == ''}}; then
+          python3 ${{github.action_path}}/src/integrations/openai/create_summary.py /tmp/report_output.md --model "${{inputs.openai-model}}" >> $GITHUB_STEP_SUMMARY
         else
-          python3 ${{github.action_path}}/src/integrations/openai/create_summary.py /tmp/report_output.md --model "${{inputs.openAI_model}}" --user_input "${{inputs.openAI_user_prompt}}" >> $GITHUB_STEP_SUMMARY
+          python3 ${{github.action_path}}/src/integrations/openai/create_summary.py /tmp/report_output.md --model "${{inputs.openai-model}}" --user_input "${{inputs.openai-user-prompt}}" >> $GITHUB_STEP_SUMMARY
         fi
       fi
 
@@ -275,7 +275,7 @@ runs:
       cat /tmp/report_output.md >> $GITHUB_STEP_SUMMARY
 
   - name: Save captures and events on S3 bucket
-    if: ${{ inputs.save_capture == 'true' && env.AWS_ACCESS_KEY_ID != '' && env.AWS_SECRET_ACCESS_KEY != '' && env.S3_BUCKET != ''}}
+    if: ${{ inputs.save-capture == 'true' && env.AWS_ACCESS_KEY_ID != '' && env.AWS_SECRET_ACCESS_KEY != '' && env.S3_BUCKET != ''}}
     shell: bash
     run: |
       sudo apt-get update
