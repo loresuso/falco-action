@@ -7,11 +7,7 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-    
-    - name: Falco
-      uses: darryk10/falco-action/falco@test-falco-simple-mode
-      with:
-        custom-rule-file: ${{ github.workspace }}/rules/falco_cicd_rules.yaml
+
 
     - name: Overwrite Source Code
       shell: bash
