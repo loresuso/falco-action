@@ -8,8 +8,20 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
+    - name: Start Falco
+      uses: darryk10/falco-action/start@0228f5ee992f92a43c486997503fe585cc4335a1
+      with:
+        mode: live
+        falco-version: '0.29.0'
+        verbose: true
 
     - name: Overwrite Source Code
       shell: bash
       run: |
         echo "pwned" > ${{ github.workspace }}/pwn.txt
+
+    - name: Stop Falco
+      uses: darryk10/falco-action/stop@0228f5ee992f92a43c486997503fe585cc4335a1
+      with:
+        mode: live
+        verbose: true
