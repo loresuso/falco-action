@@ -25,15 +25,11 @@ runs:
     shell: bash
     continue-on-error: true
     run: |
-      set -x
-      echo "Stopping containers"
-      docker ps
-      falco=$(docker ps --format '{{.Names}}' | grep -o falco)
-      if [[ ! -z "$falco" ]]; then
+      echo "Stopping Falco or Sysdig containers"
+      docker ps -a
+      if [[ "${{ inputs.mode }}" == "live" ]]; then
         docker stop falco
-      fi
-      sysdig=$(docker ps --format '{{.Names}}' | grep -o sysdig)
-      if [[ ! -z "$sysdig" ]]; then
+      elif [[ "${{ inputs.mode }}" == "analyze" ]]; then
         docker stop sysdig
       fi
   
