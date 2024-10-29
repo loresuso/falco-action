@@ -48,6 +48,8 @@ runs:
         -H "Accept: application/vnd.github.v3+json" \
         https://api.github.com/repos/$REPO/actions/runs/$RUN_ID/jobs > jobs.json
       
+      cat jobs.json
+      
       # Parse JSON and retrieve step info with timestamps
       echo "Job details:"
       jq -c '.jobs[] | {job_id: .id, job_name: .name, steps: .steps[] | {name: .name, started_at: .started_at, completed_at: .completed_at, status: .status}}' jobs.json > steps.json
