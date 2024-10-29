@@ -9,7 +9,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Start Falco
-      uses: darryk10/falco-action/start@0228f5ee992f92a43c486997503fe585cc4335a1
+      uses: darryk10/falco-action/start@4b4407d619fa5500ffe7c4a0ba76229c2aa72936
       with:
         mode: live
         falco-version: '0.29.0'
@@ -21,7 +21,7 @@ jobs:
         echo "pwned" > ${{ github.workspace }}/pwn.txt
 
     - name: Stop Falco
-      uses: darryk10/falco-action/stop@0228f5ee992f92a43c486997503fe585cc4335a1
+      uses: darryk10/falco-action/stop@4b4407d619fa5500ffe7c4a0ba76229c2aa72936
       with:
         mode: live
         verbose: true
