@@ -1,7 +1,15 @@
-name: 'Falco Action'
+name: 'Falco Action Start'
 description: 'Run Falco in a GitHub action'
 author: 'The Falco Authors'
 inputs:
+  mode: 
+    description: 'Start action with a mode. Can be live or analyze'
+    required: false
+    default: 'live'
+  falco-version: 
+    description: 'Falco version to use'
+    required: false
+    default: 'latest'
   config-file:
     description: 'Start action with a config file'
     required: false
@@ -13,7 +21,25 @@ inputs:
 runs:
   using: 'composite'
   steps:
+  - name: Validate mode
+    run: |
+      if [[ "${{ inputs.mode }}" != "live" && "${{ inputs.mode }}" != "analyze" ]]; then
+        echo "Invalid mode. Must be either live or analyze"
+        exit 1
+      fi
+  - name: Start Falco
+    if: ${{ inputs.mode == 'live' }}
+    shell: bash
+    run: |
+      docker run --rm -d \
+      --name falco \
+      --privileged \
+      -v /var/run/docker.sock:/host/var/run/docker.sock \
+      -v /proc:/host/proc:ro \
+      -v /etc:/host/etc:ro \
+      falcosecurity/falco-no-driver:${{ inputs.falco-version }} falco -o "json_output=true" -o "file_output.enabled=true" -o "file_output.keep_alive=false" -o "file_output.filename=/tmp/falco_events.json" -o "engine.kind=ebpf"
   - name: Start Sysdig capture
+    if: ${{ inputs.mode == 'analyze' }}
     shell: bash
     run: |
       IGNORE_FILTER_FOLDER=${{github.action_path}}/src
