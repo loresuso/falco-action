@@ -25,6 +25,7 @@ runs:
     shell: bash
     run: |
       echo "Stopping containers"
+      docker ps
       falco=$(docker ps --format '{{.Names}}' | grep -o falco)
       if [[ ! -z "$falco" ]]; then
         docker stop falco
