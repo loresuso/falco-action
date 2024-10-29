@@ -23,6 +23,7 @@ runs:
   
   - name: Stop Falco or Sysdig containers
     shell: bash
+    continue-on-error: true
     run: |
       echo "Stopping containers"
       docker ps
