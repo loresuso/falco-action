@@ -71,15 +71,15 @@ runs:
       if [[ ${{ inputs.verbose }} == "true" ]]; then
         set -x
       fi
-      
-      python3 -m pip install -r ${{github.action_path}}/src/requirements.txt
+
+      python3 -m pip install -r ${{github.action_path}}/../common/requirements.txt
       ls -al /tmp
       # Falco events
       if [[ -s /tmp/falco_events.json ]]; then
         echo "Printing triggered rules in Job summary"
         echo "# Report Details" >> /tmp/report_output.md
         echo "## Falco Events" >> /tmp/report_output.md
-        content=$(python3 ${{github.action_path}}/src/falco_events_to_md.py /tmp/falco_events.json /tmp/steps.json)
+        content=$(python3 ${{github.action_path}}/../common/falco_events_to_md.py /tmp/falco_events.json /tmp/steps.json)
         echo "$content" >> /tmp/report_output.md
         cat /tmp/report_output.md
       

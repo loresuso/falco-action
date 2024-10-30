@@ -4,23 +4,29 @@ author: 'The Falco Authors'
 inputs:
   custom-rule-file:
     description: 'Custom rule file'
-    required: false
+    type: string
     default: ''
+    required: false
   filters-config:
     description: 'Filter configuration file'
-    required: false
+    type: string
     default: 'src/filters.config'
+    required: false
   save-capture:
     description: "Save Files on S3?"
     type: boolean
     default: false
+    required: false
   openai-model:
     description: "Open AI model to use for summary"
-    type: sting
+    type: string
     default: "gpt-3.5-turbo"
+    required: false
   openai-user-prompt:
     description: "Message to send to OpenAI"
     type: string
+    default: ''
+    required: false
 runs:
   using: 'composite'
   steps:
@@ -179,13 +185,13 @@ runs:
       RUN_ID: ${{ github.run_id }}
       REPO: ${{ github.repository }}
     run: |
-      python3 -m pip install -r ${{github.action_path}}/src/requirements.txt
+      python3 -m pip install -r ${{github.action_path}}/../common/requirements.txt
       # Falco events
       if [[ -s /tmp/falco_events.json ]]; then
         echo "Printing triggered rules in Job summary"
         echo "# Report Details" >> /tmp/report_output.md
         echo "## Falco Events" >> /tmp/report_output.md
-        content=$(python3 ${{github.action_path}}/src/falco_events_to_md.py /tmp/falco_events.json /tmp/steps.json)
+        content=$(python3 ${{github.action_path}}/../common/falco_events_to_md.py /tmp/falco_events.json /tmp/steps.json)
         echo "$content" >> /tmp/report_output.md
       
         if ${{ github.event_name == 'pull_request' }}; then
