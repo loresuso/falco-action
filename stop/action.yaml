@@ -25,6 +25,10 @@ runs:
     shell: bash
     continue-on-error: true
     run: |
+      if [[ "${{ inputs.verbose }}" == "true" ]]; then
+        set -x
+      fi
+
       echo "Stopping Falco or Sysdig containers"
       if docker ps --format '{{.Names}}' | grep -qE '^(falco|sysdig)$'; then
           docker stop $(docker ps -q --filter name='^falco$' --filter name='^sysdig$')
@@ -40,7 +44,10 @@ runs:
     run: |
       # If we are in live mode, we need to retrieve the job details to get the steps with timestamps
       # This is useful to understand in which step the security event occured and requires to access the GitHub API
-      set -x
+      if [[ ${{ inputs.verbose }} == "true" ]]; then
+        set -x
+      fi
+
       echo "Retrieving details for run_id=$RUN_ID"
       curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
         -H "Accept: application/vnd.github.v3+json" \
@@ -61,7 +68,10 @@ runs:
     if: ${{ inputs.mode == 'live' }}
     shell: bash
     run: |
-      set -x
+      if [[ ${{ inputs.verbose }} == "true" ]]; then
+        set -x
+      fi
+      
       python3 -m pip install -r ${{github.action_path}}/src/requirements.txt
       ls -al /tmp
       # Falco events

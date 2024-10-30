@@ -32,6 +32,10 @@ runs:
     if: ${{ inputs.mode == 'live' }}
     shell: bash
     run: |
+      if [[ "${{ inputs.verbose }}" == "true" ]]; then
+        set -x
+      fi
+
       docker run --rm -d \
         --name falco \
         --privileged \
@@ -47,6 +51,10 @@ runs:
     if: ${{ inputs.mode == 'analyze' }}
     shell: bash
     run: |
+      if [[ "${{ inputs.verbose }}" == "true" ]]; then
+        set -x
+      fi
+      
       IGNORE_FILTER_FOLDER=${{github.action_path}}/src
       CONFIG_FILE="${{github.action_path}}/${{inputs.config-file}}"
 
