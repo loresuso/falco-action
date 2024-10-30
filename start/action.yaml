@@ -39,6 +39,7 @@ runs:
       docker run --rm -d \
         --name falco \
         --privileged \
+        -v /tmp:/tmp \
         -v /var/run/docker.sock:/host/var/run/docker.sock \
         -v /proc:/host/proc:ro \
         -v /etc:/host/etc:ro \
