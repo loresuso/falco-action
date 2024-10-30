@@ -26,11 +26,8 @@ runs:
     continue-on-error: true
     run: |
       echo "Stopping Falco or Sysdig containers"
-      docker ps -a
-      if [[ "${{ inputs.mode }}" == "live" ]]; then
-        docker stop falco
-      elif [[ "${{ inputs.mode }}" == "analyze" ]]; then
-        docker stop sysdig
+      if docker ps --format '{{.Names}}' | grep -qE '^(falco|sysdig)$'; then
+          docker stop $(docker ps -q --filter name='^falco$' --filter name='^sysdig$')
       fi
   
   - name: Retrieve Job Info using GitHub API
@@ -64,7 +61,9 @@ runs:
     if: ${{ inputs.mode == 'live' }}
     shell: bash
     run: |
+      set -x
       python3 -m pip install -r ${{github.action_path}}/src/requirements.txt
+      
       # Falco events
       if [[ -s /tmp/falco_events.json ]]; then
         echo "Printing triggered rules in Job summary"
