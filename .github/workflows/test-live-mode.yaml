@@ -25,7 +25,7 @@ jobs:
       run: |
         echo "pwned" > ${{ github.workspace }}/pwn.txt
     
-    - name: Privileged container
+    - name: Read Sensitive File
       run: |
         sleep 3
         docker run --rm --privileged ubuntu cat /etc/shadow

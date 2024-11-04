@@ -24,11 +24,11 @@ jobs:
       run: |
         echo "pwned" > ${{ github.workspace }}/pwn.txt
     
-    - name: Privileged container
+    - name: Read Sensitive File
       run: |
-        sleep 1
-        docker run --rm -d --privileged hello-world
-        sleep 1
+        sleep 3
+        docker run --rm --privileged ubuntu cat /etc/shadow
+        sleep 3
 
     - name: Stop Falco
       uses: darryk10/falco-action/stop@3e3ec1727005bf3a844460a878c792a0b192b2ae
