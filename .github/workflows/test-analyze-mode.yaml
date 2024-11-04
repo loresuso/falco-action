@@ -17,7 +17,7 @@ jobs:
       uses: darryk10/falco-action/start@80e3c126abe2d9ffa07525447f020ccf7faed4a1
       with:
         mode: analyze
-        falco-version: '0.29.0'
+        falco-version: '0.39.0'
         verbose: true
 
     - name: Overwrite Source Code
