@@ -112,7 +112,7 @@ runs:
     run: |      
       # Extract executables' hash. Since hashes are computed afterwards and not by Sysdig, we need to extract them from the runner of this job.
       # This is workaround, hashes should be computed in real-time by sysdig. Just hash the exepath we know that have been executed for now.
-      ${{github.action_path}}/src/run_sysdig.sh filter "/tmp/capture.scap" "$OUTBOUND_FILTER $CUSTOM_FILTERS" "$OUTBOUND_OUTPUT" "/tmp/proc.txt"
+      ${{github.action_path}}/../common/run_sysdig filter "/tmp/capture.scap" "$OUTBOUND_FILTER $CUSTOM_FILTERS" "$OUTBOUND_OUTPUT" "/tmp/proc.txt"
       cat /tmp/proc.txt | jq '."proc.exepath"' | tr -d "\"" | while read -r file; do
         if [ -f "$file" ]; then
             line=$(sha256sum "$file")
