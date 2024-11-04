@@ -17,7 +17,7 @@ jobs:
       uses: darryk10/falco-action/start@06536f0dfdb0978adbac81f019a7b5bfabe1e3a1
       with:
         mode: live
-        falco-version: '0.29.0'
+        falco-version: '0.39.0'
         verbose: true
 
     - name: Overwrite Source Code
@@ -28,7 +28,6 @@ jobs:
     - name: Privileged container
       run: |
         sleep 3
-        echo '{"hostname":"9f18dccebc6f","output":"2024-11-04T11:33:27.246881247+0000: Warning Sensitive file opened for reading by non-trusted program (file=/etc/shadow gparent=systemd ggparent=<NA> gggparent=<NA> evt_type=openat user=root user_uid=0 user_loginuid=-1 process=cat proc_exepath=/usr/bin/cat parent=containerd-shim command=cat /etc/shadow terminal=34816 container_id=d96476760e51 container_name=<NA>)","output_fields":{"container.id":"d96476760e51","container.name":null,"evt.time.iso8601":1730720007246881247,"evt.type":"openat","fd.name":"/etc/shadow","proc.aname[2]":"systemd","proc.aname[3]":null,"proc.aname[4]":null,"proc.cmdline":"cat /etc/shadow","proc.exepath":"/usr/bin/cat","proc.name":"cat","proc.pname":"containerd-shim","proc.tty":34816,"user.loginuid":-1,"user.name":"root","user.uid":0},"priority":"Warning","rule":"Read sensitive file untrusted","source":"syscall","tags":["T1555","container","filesystem","host","maturity_stable","mitre_credential_access"],"time":"2024-11-04T11:33:27.246881247Z"}' > /tmp/falco_events.json
         docker run --rm --privileged ubuntu cat /etc/shadow
         sleep 3
 
