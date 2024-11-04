@@ -11,6 +11,41 @@ inputs:
     description: 'Falco version to use'
     required: false
     default: 'latest'
+  extract-connections:
+    description: 'Extract connections'
+    type: boolean
+    default: true
+    required: false
+  extract-written-files:
+    description: 'Extract written files'
+    type: boolean
+    default: false
+    required: false
+  extract-processes:
+    description: 'Extract processes'
+    type: boolean
+    default: true
+    required: false
+  extract-dns:
+    description: 'Extract DNS'
+    type: boolean
+    default: true
+    required: false
+  extract-containers:
+    description: 'Extract containers'
+    type: boolean
+    default: true
+    required: false
+  extract-chisels:
+    description: 'Extract chisels'
+    type: boolean
+    default: false
+    required: false
+  extract-hashes:
+    description: 'Extract hashes'
+    type: boolean
+    default: false
+    required: false
   filters-config:
     description: 'Filter configuration file'
     type: string
@@ -41,6 +76,7 @@ runs:
       path: /tmp
 
   - name: Download hashes
+    if: ${{ inputs.extract-hashes == 'true' }}
     uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
     with:
       name: hashes
@@ -73,6 +109,7 @@ runs:
       stat /tmp/falco_events.json
 
   - name: Extract outbound connections
+    if: ${{ inputs.extract-connections == 'true' }}
     shell: bash
     env:
       VERBOSE: ${{ inputs.verbose }}
@@ -86,6 +123,7 @@ runs:
       ${{github.action_path}}/../common/run_sysdig.sh filter "/tmp/capture.scap" "$OUTBOUND_FILTER $CUSTOM_FILTERS" "$OUTBOUND_OUTPUT" "/tmp/outbound.txt"
 
   - name: Extract written files
+    if: ${{ inputs.extract-written-files == 'true' }}
     shell: bash
     env:
       VERBOSE: ${{ inputs.verbose }}
@@ -99,6 +137,7 @@ runs:
       ${{github.action_path}}/../common/run_sysdig.sh filter "/tmp/capture.scap" "$FILE_WRITTEN_FILTER $CUSTOM_FILTERS" "$FILE_WRITTEN_OUTPUT" "/tmp/files_written.txt"
 
   - name: Extract processes information
+    if: ${{ inputs.extract-processes == 'true' }}
     shell: bash
     env:
       VERBOSE: ${{ inputs.verbose }}
@@ -112,6 +151,7 @@ runs:
       ${{github.action_path}}/../common/run_sysdig.sh filter "/tmp/capture.scap" "$PROC_FILTER $CUSTOM_FILTERS" "$PROC_FILTER_OUTPUT" "/tmp/proc.txt"
 
   - name: Extract chisels information for summary
+    if: ${{ inputs.extract-chisels == 'true' }}
     shell: bash
     env:
       VERBOSE: ${{ inputs.verbose }}
@@ -121,6 +161,7 @@ runs:
       ${{github.action_path}}/../common/run_sysdig.sh chisel "/tmp/capture.scap" "topprocs_net.lua" "/tmp/topprocs_net.txt"
 
   - name: Extract DNS domains
+    if: ${{ inputs.extract-dns == 'true' }}
     shell: bash
     env:
       VERBOSE: ${{ inputs.verbose }}
@@ -141,6 +182,7 @@ runs:
       done < /tmp/dns_extract.txt > /tmp/dns_extract_json.txt
   
   - name: Extract executables' hash
+    if: ${{ inputs.extract-hashes == 'true' }}
     shell: bash
     env:
       VERBOSE: ${{ inputs.verbose }}
@@ -159,6 +201,7 @@ runs:
       sort -u -o /tmp/hashes.txt /tmp/hashes.txt
   
   - name: Extract docker container images
+    if: ${{ inputs.extract-containers == 'true' }}
     shell: bash
     env:
       VERBOSE: ${{ inputs.verbose }}
