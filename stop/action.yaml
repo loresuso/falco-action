@@ -110,8 +110,12 @@ runs:
     env:
       VERBOSE: ${{ inputs.verbose }}
     run: |      
-      # Extract executables' hash. Since hashes are computed afterwards and not by Sysdig, we need to extract them from the runner of this job.
-      # This is workaround, hashes should be computed in real-time by sysdig. Just hash the exepath we know that have been executed for now.
+      ls -al /tmp
+      echo "PATH: ${{ github.action_path }}"
+      if [[ "${VERBOSE}" == "true" ]]; then
+        set -x
+        ls -al /tmp
+      fi
       ${{github.action_path}}/../common/run_sysdig filter "/tmp/capture.scap" "$OUTBOUND_FILTER $CUSTOM_FILTERS" "$OUTBOUND_OUTPUT" "/tmp/proc.txt"
       cat /tmp/proc.txt | jq '."proc.exepath"' | tr -d "\"" | while read -r file; do
         if [ -f "$file" ]; then

@@ -7,6 +7,10 @@ inputs:
     type: string
     default: ''
     required: false
+  falco-version:
+    description: 'Falco version to use'
+    required: false
+    default: 'latest'
   filters-config:
     description: 'Filter configuration file'
     type: string
@@ -31,13 +35,13 @@ runs:
   using: 'composite'
   steps:
   - name: Download capture
-    using: actions/download-artifact@
+    using: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
     with:
       name: capture
       path: /tmp/capture.scap
 
   - name: Download hashes
-    using: actions/download-artifact@
+    using: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
     with:
       name: hashes
       path: /tmp/hashes.txt
@@ -56,7 +60,7 @@ runs:
       docker run --rm --name falco \
         -v /tmp:/tmp \
         $MOUNT_CUSTOM_RULE \
-        falcosecurity/falco-no-driver:latest falco -o "json_output=true" -o "file_output.enabled=true" -o "file_output.keep_alive=false" -o "file_output.filename=/tmp/falco_events.json" -o "engine.kind=replay" -o "engine.replay.capture_file=/tmp/capture.scap" 
+        falcosecurity/falco-no-driver:${{ inputs.falco-version }} falco -o "json_output=true" -o "file_output.enabled=true" -o "file_output.keep_alive=false" -o "file_output.filename=/tmp/falco_events.json" -o "engine.kind=replay" -o "engine.replay.capture_file=/tmp/capture.scap" 
 
   - name: Extract outbound connections
     shell: bash
