@@ -81,7 +81,7 @@ runs:
         echo "Custom filters: $CUSTOM_FILTERS"
       fi
       OUTBOUND_OUTPUT="%fd.sip,%fd.sport,%proc.name,%proc.exepath,%user.name"
-      ${{github.action_path}}/../common/run_sysdig filter "/tmp/capture.scap" "$OUTBOUND_FILTER $CUSTOM_FILTERS" "$OUTBOUND_OUTPUT" "/tmp/outbound.txt"
+      ${{github.action_path}}/../common/run_sysdig.sh filter "/tmp/capture.scap" "$OUTBOUND_FILTER $CUSTOM_FILTERS" "$OUTBOUND_OUTPUT" "/tmp/outbound.txt"
 
   - name: Extract written files
     shell: bash
@@ -94,7 +94,7 @@ runs:
         echo "Custom filters: $CUSTOM_FILTERS"
       fi
       FILE_WRITTEN_OUTPUT="%fd.name,%proc.name,%proc.exepath,%proc.pexepath,%user.name"
-      ${{github.action_path}}/../common/run_sysdig filter "/tmp/capture.scap" "$FILE_WRITTEN_FILTER $CUSTOM_FILTERS" "$FILE_WRITTEN_OUTPUT" "/tmp/files_written.txt"
+      ${{github.action_path}}/../common/run_sysdig.sh filter "/tmp/capture.scap" "$FILE_WRITTEN_FILTER $CUSTOM_FILTERS" "$FILE_WRITTEN_OUTPUT" "/tmp/files_written.txt"
 
   - name: Extract processes information
     shell: bash
@@ -107,16 +107,16 @@ runs:
         echo "Custom filters: $CUSTOM_FILTERS"
       fi
       PROC_FILTER_OUTPUT="%proc.name,%proc.exepath,%proc.pname,%proc.pexepath,%user.name"
-      ${{github.action_path}}/../common/run_sysdig filter "/tmp/capture.scap" "$PROC_FILTER $CUSTOM_FILTERS" "$PROC_FILTER_OUTPUT" "/tmp/proc.txt"
+      ${{github.action_path}}/../common/run_sysdig.sh filter "/tmp/capture.scap" "$PROC_FILTER $CUSTOM_FILTERS" "$PROC_FILTER_OUTPUT" "/tmp/proc.txt"
 
   - name: Extract chisels information for summary
     shell: bash
     env:
       VERBOSE: ${{ inputs.verbose }}
     run: |
-      ${{github.action_path}}/../common/run_sysdig chisel "/tmp/capture.scap" "udp_extract.lua" "/tmp/udp_extract.txt"
-      ${{github.action_path}}/../common/run_sysdig chisel "/tmp/capture.scap" "topconns.lua" "/tmp/top_connection.txt"
-      ${{github.action_path}}/../common/run_sysdig chisel "/tmp/capture.scap" "topprocs_net.lua" "/tmp/topprocs_net.txt"
+      ${{github.action_path}}/../common/run_sysdig.sh chisel "/tmp/capture.scap" "udp_extract.lua" "/tmp/udp_extract.txt"
+      ${{github.action_path}}/../common/run_sysdig.sh chisel "/tmp/capture.scap" "topconns.lua" "/tmp/top_connection.txt"
+      ${{github.action_path}}/../common/run_sysdig.sh chisel "/tmp/capture.scap" "topprocs_net.lua" "/tmp/topprocs_net.txt"
 
   - name: Extract DNS domains
     shell: bash
@@ -125,7 +125,7 @@ runs:
     run: |
       DNS_FILTER="evt.type in (recvmsg,read,recv,recvfrom) and fd.rport=53 and fd.l4proto=udp"
       DNS_OUTPUT="%evt.buffer"
-      ${{github.action_path}}/../common/run_sysdig filter "/tmp/capture.scap" "$DNS_FILTER" "$DNS_OUTPUT" "/tmp/buffers.txt"
+      ${{github.action_path}}/../common/run_sysdig.sh filter "/tmp/capture.scap" "$DNS_FILTER" "$DNS_OUTPUT" "/tmp/buffers.txt"
       if [[ ! -s /tmp/buffers.txt ]]; then
         echo "Warning: No contacted DNS domains found"
         exit 0
@@ -163,7 +163,7 @@ runs:
     run: |
       CONTAINER_FILTER="evt.type=container"
       CONTAINER_OUTPUT="%container.name,%container.image.repository"
-      ${{github.action_path}}/../common/run_sysdig filter "/tmp/capture.scap" "$CONTAINER_FILTER" "$CONTAINER_OUTPUT" "/tmp/containers.txt"
+      ${{github.action_path}}/../common/run_sysdig.sh filter "/tmp/capture.scap" "$CONTAINER_FILTER" "$CONTAINER_OUTPUT" "/tmp/containers.txt"
       if [[ -s /tmp/containers.txt ]]; then
         sort -u -o /tmp/containers.txt /tmp/containers.txt
         echo "Sorted /tmp/containers.txt"
