@@ -48,7 +48,14 @@ runs:
   
   - name: Start Falco in capture mode
     shell: bash
+    env:
+      VERBOSE: ${{ inputs.verbose }}
     run: |
+      if [ "$VERBOSE" = "true" ]; then
+        set -x
+      fi
+      ls -al /tmp
+      
       MOUNT_CUSTOM_RULE=""
       if [[ -f "${{inputs.custom-rule-file}}" ]]; then
         if [ "${{ inputs.verbose }}" = "true" ]; then
