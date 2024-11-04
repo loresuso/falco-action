@@ -110,15 +110,12 @@ runs:
     env:
       VERBOSE: ${{ inputs.verbose }}
     run: |      
-      ls -al /tmp
-      echo "PATH: ${{ github.action_path }}"
       if [[ "${VERBOSE}" == "true" ]]; then
         set -x
-        ls -al /tmp
       fi
       PROC_FILTER="evt.type in (execve, execveat) and evt.dir=< and evt.arg.res=0"
       PROC_FILTER_OUTPUT="%proc.name,%proc.exepath,%proc.pname,%proc.pexepath,%user.name"
-      ${{github.action_path}}/../common/run_sysdig filter "/tmp/capture.scap" "$PROC_FILTER" "$PROC_FILTER_OUTPUT" "/tmp/proc.txt"
+      ${{github.action_path}}/../common/run_sysdig.sh filter "/tmp/capture.scap" "$PROC_FILTER" "$PROC_FILTER_OUTPUT" "/tmp/proc.txt"
       cat /tmp/proc.txt | jq '."proc.exepath"' | tr -d "\"" | while read -r file; do
         if [ -f "$file" ]; then
             line=$(sha256sum "$file")
