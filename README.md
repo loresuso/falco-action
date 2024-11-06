@@ -86,6 +86,7 @@ By default the action will drop the following syscalls contained in `syscall_ign
     ]
 }
 ```
+By passing a custom file to the action it's possible to override the filters applying custom ones.
 
 ## Analyze mode
 
