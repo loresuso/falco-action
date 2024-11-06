@@ -50,6 +50,42 @@ jobs:
         verbose: true
 ```
 
+###Start action
+
+Start action accept the following inputs: 
+
+| Input            | Description                                      | Type    | Required | Default                     |
+|------------------|--------------------------------------------------|---------|----------|-----------------------------|
+| `falco-version`  | Falco version to use                             | string  | false    | latest                      |
+| `config-file`    | Start action with a config file (analyze mode only) | string  | false    | src/syscall_ignore.config   |
+| `custom-rule-file` | Custom rule file                               | string  | false    | (empty)                     |
+| `verbose`        | Enable verbose logs                              | boolean | false    | false                       |
+
+
+#### Config file - syscall filtering
+Captures can get very big and hard to manage. For this reason, applying syscall filters would help on keep captures light but with all the information we need to assess what is going on in our workflows.
+By default the action will drop the following syscalls contained in `syscall_ignore.config` file
+
+```yaml
+{
+    "ignore_syscalls": [
+        "switch",
+        "rt_sigprocmask",
+        "clock_gettime",
+        "rt_sigaction",
+        "waitid",
+        "getpid",
+        "clock_getres",
+        "mprotect",
+        "gettimeofday",
+        "close",
+        "time",
+        "getdents64",
+        "clock_nanosleep"
+    ]
+}
+```
+
 ## Analyze mode
 
 Analyze mode is meant to offer a more detailed report. 
