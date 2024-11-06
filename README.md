@@ -4,12 +4,14 @@ Run [Falco](https://github.com/falcosecurity/falco) in a GitHub Action to detect
 
 This GitHub Action can be used to monitor your GitHub runner and detect Software Supply Chain attacks thanks to ad-hoc Falco rules specific to this use case.
 
-The repository is home of three GitHub Actions, namely `start`, `stop` and `analyze`. We currently support two mode of operation:
+The repository is home of three GitHub Actions, namely `start`, `stop` and `analyze`. We currently support two modes of operation:
 
 - live mode
 - analyze mode
 
 Let's delve into their details.
+
+> Note: we recommend users to always pin the dependencies of this GitHub Action to ensure the use of an immutable release
 
 ## Live mode
 
