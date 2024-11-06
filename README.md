@@ -163,6 +163,11 @@ Analyze action currently accepts the following config inputs.
 #### Config file - filtering and exceptions
 Filters and exceptions can be applied to the report to create tailored insights, reduce false positives, and highlight critical information. Since Falco runs under the hood, you can easily leverage familiar Falco conditions to add exceptions and filters.
 
+We currently accept filters on:
+- outbound_connections
+- written_files
+- processes
+
 By default, this action applies exceptions specified in the `filters.config` file. You can override default filters by providing a custom file to the action.
 
 #### Example
