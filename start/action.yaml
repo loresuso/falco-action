@@ -4,19 +4,28 @@ author: 'The Falco Authors'
 inputs:
   mode: 
     description: 'Start action with a mode. Can be live or analyze'
+    type: string
     required: false
     default: 'live'
   falco-version: 
     description: 'Falco version to use'
+    type: string
     required: false
     default: 'latest'
   config-file:
-    description: 'Start action with a config file'
+    description: 'Start action with a config file. Only used in analyze mode'
+    type: string
     required: false
     default: 'src/syscall_ignore.config'
+  custom-rule-file:
+    description: 'Custom rule file'
+    type: string
+    default: ''
+    required: false
   verbose:
     description: 'Enable verbose logs'
     type: boolean
+    required: false
     default: false
 runs:
   using: 'composite'
@@ -36,6 +45,14 @@ runs:
         set -x
       fi
 
+      MOUNT_CUSTOM_RULE=""
+      if [[ -f "${{inputs.custom-rule-file}}" ]]; then
+        if [ "${{ inputs.verbose }}" = "true" ]; then
+          echo "Loading custom rules from ${{inputs.custom-rule-file}}"
+        fi
+        MOUNT_CUSTOM_RULE="-v ${{inputs.custom-rule-file}}:/etc/falco/rules.d/custom_rules.yaml"
+      fi
+
       docker run --rm -d \
         --name falco \
         --privileged \
@@ -43,6 +60,7 @@ runs:
         -v /var/run/docker.sock:/host/var/run/docker.sock \
         -v /proc:/host/proc:ro \
         -v /etc:/host/etc:ro \
+        $MOUNT_CUSTOM_RULE \
         falcosecurity/falco-no-driver:${{ inputs.falco-version }} falco -o "json_output=true" -o "file_output.enabled=true" -o "file_output.keep_alive=false" -o "file_output.filename=/tmp/falco_events.json" -o "engine.kind=modern_ebpf"
 
       # Wait for the Falco container to be fully started
