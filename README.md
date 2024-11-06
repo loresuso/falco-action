@@ -103,7 +103,7 @@ Stop action accept the following inputs:
 ## Analyze mode
 
 Analyze mode is meant to offer a more detailed report. 
-To achieve this, a `scap` file is generated via a [Sysdig](https://github.com/draios/sysdig) container, which is started and stopped using the `start` and `stop` actions, respectively. The capture file is then uploaded as an artifact and passed to a subsequent `analyze` job, that uses the `analyze` action. The latter may use additional secrets that we want to keep separate from the job we are protecting, and integrate with external services to provide more relevant security information, such as OpenAI, VirusTotal and more. 
+To achieve this, a `scap` file is generated via a [Sysdig](https://github.com/draios/sysdig) container, which is started and stopped using the `start` and `stop` actions, respectively. The capture file is then uploaded as an artifact and passed to a subsequent `analyze` job, that uses the `analyze` action. The latter may use additional secrets we want to keep separate from the job we are protecting and integrate with external services to provide more relevant security information, such as OpenAI, VirusTotal, and more. 
 The final report will (configurably) contain:
 - Falco rules triggered during steps' execution. 
 - Contacted IPs
@@ -162,7 +162,7 @@ Analyze action currently accepts the following config inputs:
 | `filters-config`      | Filter configuration file                  | string  | false    | src/filters.config  |
 
 #### Config file - filtering and exceptions
-Filters and exceptions can be applied to the report to create tailored insights, reduce false positives, and highlight critical information. Since Falco runs under the hood, you can easily leverage familiar Falco conditions to add exceptions and filters.
+Filters and exceptions can be applied to the report to create tailored insights, reduce false positives, and highlight critical information. Since Falco runs under the hood, you can easily leverage Falco conditions to add exceptions and filters.
 
 We currently accept filters on:
 - outbound_connections
