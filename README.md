@@ -86,7 +86,7 @@ By default, the action will drop the following syscalls contained in `syscall_ig
     ]
 }
 ```
-By passing a custom file to the action, it's possible to override the filters applying custom ones.
+By passing a custom file to the action, it's possible to override the syscall filtered by default and apply custom filters.
 
 ### Stop action
 
