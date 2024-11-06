@@ -51,11 +51,6 @@ inputs:
     type: string
     default: 'src/filters.config'
     required: false
-  save-capture:
-    description: "Save Files on S3?"
-    type: boolean
-    default: false
-    required: false
   openai-model:
     description: "Open AI model to use for summary"
     type: string
@@ -332,20 +327,3 @@ runs:
 
       echo "Appending report to github summary"
       cat /tmp/report_output.md >> $GITHUB_STEP_SUMMARY
-
-  - name: Save captures and events on S3 bucket
-    if: ${{ inputs.save-capture == 'true' && env.AWS_ACCESS_KEY_ID != '' && env.AWS_SECRET_ACCESS_KEY != '' && env.AWS_S3_BUCKET_NAME != ''}}
-    shell: bash
-    run: |
-      sudo apt-get update
-      sudo apt-get install -y awscli
- 
-      aws configure set aws_access_key_id ${{ env.AWS_ACCESS_KEY_ID }}
-      aws configure set aws_secret_access_key ${{ env.AWS_SECRET_ACCESS_KEY }}
-      aws configure set default.region ${{ env.AWS_DEFAULT_REGION }}
-
-      FOLDER_NAME=$(date +"%Y%m%d_%H%M%S")
-      CAPTURE_FILE_NAME="capture_$FOLDER_NAME.scap"
-      EVENT_FILE_NAME="events_$FOLDER_NAME.json"
-      S3_DESTINATION_FOLDER="s3://${{ env.AWS_S3_BUCKET_NAME }}/$FOLDER_NAME"
-      aws s3 cp /tmp/capture.scap "$S3_DESTINATION_FOLDER/$CAPTURE_FILE_NAME"
