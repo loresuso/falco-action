@@ -64,8 +64,8 @@ Start action accept the following inputs:
 
 
 #### Config file - syscall filtering
-Captures can get very big and hard to manage. For this reason, applying syscall filters would help on keep captures light but with all the information we need to assess what is going on in our workflows.
-By default the action will drop the following syscalls contained in `syscall_ignore.config` file
+Captures can become very big and hard to manage. For this reason, applying syscall filters would help keep captures light but provide all the information we need to assess what is going on in our workflows.
+By default, the action will drop the following syscalls contained in `syscall_ignore.config` file.
 
 ```yaml
 {
@@ -86,7 +86,7 @@ By default the action will drop the following syscalls contained in `syscall_ign
     ]
 }
 ```
-By passing a custom file to the action it's possible to override the filters applying custom ones.
+By passing a custom file to the action, it's possible to override the filters applying custom ones.
 
 ### Stop action
 
@@ -148,9 +148,49 @@ jobs:
       with:
         falco-version: '0.39.0'
 ```
+### Analyze Action
+
+Analyze action currently accepts the following config inputs.
+
+| Input                 | Description                                | Type    | Required | Default             |
+|-----------------------|--------------------------------------------|---------|----------|---------------------|
+| `custom-rule-file`    | Custom rule file                           | string  | false    | (empty)             |
+| `falco-version`       | Falco version to use                       | string  | false    | latest              |
+| `filters-config`      | Filter configuration file                  | string  | false    | src/filters.config  |
+
+#### Config file - filtering and exceptions
+Filters and exceptions can be applied to the report to create tailored insights, reduce false positives, and highlight critical information. Since Falco runs under the hood, you can easily leverage familiar Falco conditions to add exceptions and filters.
+
+By default, this action applies exceptions specified in the `filters.config` file. You can override default filters by providing a custom file to the action.
+
+#### Example
+
+```yaml
+
+{
+  "outbound_connections": [
+    {
+      "description": "Filter for connection from pythonist ",
+      "condition": "proc.name in (pythonist, dragent)"
+    }
+  ],
+  "written_files": [
+    {
+      "description": "Filter for file writes to github runner",
+      "condition": "fd.name startswith '/home/runner/runners/' and proc.exepath endswith '/bin/Runner.Worker' and proc.pexepath endswith '/bin/Runner.Listener'"
+    }
+  ],
+  "processes": [
+    {
+      "description": "Whitelisting noisy process names.",
+      "condition": "proc.name in (sysdig, systemd-logind, systemd-network, systemd-resolve, systemd-udevd, linux-bench, journalctl, systemd-journal, systemd-cgroups)"
+    }
+  ]
+}
+```
 
 ### Report Customization
-The report produced by falco-action can be customized using the following inputs.
+The report produced by analyze action can be customized using the following inputs.
 
 | Option                 | Description              | Type    | Default | Required |
 |------------------------|--------------------------|---------|---------|----------|
@@ -167,6 +207,13 @@ The report produced by falco-action can be customized using the following inputs
 Analyze mode currently supports two main external dependencies:
 - OpenAI - Using OpenAI you can generate an understanble summary report and customise it on your needs.
 - VirusTotal - Using VirusTotal you can get the reputation of IPs and Hashes found during the run
+
+Analyze action currently accepts the following inputs for external dependencies.
+
+| Option                 | Description              | Type    | Default | Required |
+|------------------------|--------------------------|---------|---------|----------|
+| `openai-model`        | OpenAI model to use for summary            | string  | false    | gpt-3.5-turbo       |
+| `openai-user-prompt`  | Message to send to OpenAI                  | string  | false    | (empty)             |
 
 #### Example
 ```yaml
