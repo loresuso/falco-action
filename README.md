@@ -203,10 +203,10 @@ The report produced by analyze action can be customized using the following inpu
 | Option                 | Description              | Type    | Default | Required |
 |------------------------|--------------------------|---------|---------|----------|
 | `extract-connections`  | Extract connections      | boolean | true    | false    |
-| `extract-written-files`| Extract written files    | boolean | false   | false    |
 | `extract-processes`    | Extract processes        | boolean | true    | false    |
 | `extract-dns`          | Extract DNS              | boolean | true    | false    |
 | `extract-containers`   | Extract containers       | boolean | true    | false    |
+| `extract-written-files`| Extract written files    | boolean | false   | false    |
 | `extract-chisels`      | Extract chisels          | boolean | false   | false    |
 | `extract-hashes`       | Extract hashes           | boolean | false   | false    |
 
