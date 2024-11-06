@@ -102,6 +102,20 @@ jobs:
         falco-version: '0.39.0'
 ```
 
+### Report Customization
+The report produced by falco-action can be customized using the following inputs.
+
+| Option                 | Description              | Type    | Default | Required |
+|------------------------|--------------------------|---------|---------|----------|
+| `extract-connections`  | Extract connections      | boolean | true    | false    |
+| `extract-written-files`| Extract written files    | boolean | false   | false    |
+| `extract-processes`    | Extract processes        | boolean | true    | false    |
+| `extract-dns`          | Extract DNS              | boolean | true    | false    |
+| `extract-containers`   | Extract containers       | boolean | true    | false    |
+| `extract-chisels`      | Extract chisels          | boolean | false   | false    |
+| `extract-hashes`       | Extract hashes           | boolean | false   | false    |
+
+
 ### External Dependencies 
 Analyze mode currently supports two main external dependencies:
 - OpenAI - Using OpenAI you can generate an understanble summary report and customise it on your needs.
