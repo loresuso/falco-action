@@ -88,6 +88,15 @@ By default the action will drop the following syscalls contained in `syscall_ign
 ```
 By passing a custom file to the action it's possible to override the filters applying custom ones.
 
+### Stop action
+
+Stop action accept the following inputs: 
+
+| Input            | Description                                      | Type    | Required | Default                     |
+|------------------|--------------------------------------------------|---------|----------|-----------------------------|
+| `mode`           | Start action with a mode. Can be live or analyze | choice  | false    | live                      |
+| `verbose`        | Enable verbose logs                              | boolean | false    | false                       |
+
 ## Analyze mode
 
 Analyze mode is meant to offer a more detailed report. 
