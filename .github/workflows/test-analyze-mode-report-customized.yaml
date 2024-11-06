@@ -1,7 +1,7 @@
 on:
   workflow_dispatch:
 
-name: Test Analyze Mode
+name: Test Analyze Mode Custom Report
 
 jobs:
   test-falco:
