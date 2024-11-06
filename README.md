@@ -111,7 +111,7 @@ Analyze mode currently supports two main external dependencies:
 ```yaml
     steps:
     - name: Analyze
-      uses: darryk10/falco-action/analyze@ddcff83af077b30af70f188ba7b5446c98041446
+      uses: falcosecurity/falco-action/analyze@<commit-sha>
       with:
         falco-version: '0.39.0'
         openai-user-prompt: "Pls add remediation steps"
