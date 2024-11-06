@@ -88,6 +88,8 @@ By default, the action will drop the following syscalls contained in `syscall_ig
 ```
 By passing a custom file to the action, it's possible to override the syscall filtered by default and apply custom filters.
 
+> Note: currently only syscall filters are supported on the capture level. More specific filters can be applied using Falco conditions in the analyze action.
+
 ### Stop action
 
 Stop action accept the following inputs: 
