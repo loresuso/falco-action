@@ -152,7 +152,7 @@ jobs:
 ```
 ### Analyze Action
 
-Analyze action currently accepts the following config inputs.
+Analyze action currently accepts the following config inputs:
 
 | Input                 | Description                                | Type    | Required | Default             |
 |-----------------------|--------------------------------------------|---------|----------|---------------------|
@@ -197,7 +197,7 @@ By default, this action applies exceptions specified in the `filters.config` fil
 ```
 
 ### Report Customization
-The report produced by analyze action can be customized using the following inputs.
+The report produced by analyze action can be customized using the following inputs:
 
 | Option                 | Description              | Type    | Default | Required |
 |------------------------|--------------------------|---------|---------|----------|
@@ -215,7 +215,7 @@ Analyze mode currently supports two main external dependencies:
 - OpenAI - Using OpenAI you can generate an understanble summary report and customise it on your needs.
 - VirusTotal - Using VirusTotal you can get the reputation of IPs and Hashes found during the run
 
-Analyze action currently accepts the following inputs for external dependencies.
+Analyze action currently accepts the following inputs for external dependencies:
 
 | Option                 | Description              | Type    | Default | Required |
 |------------------------|--------------------------|---------|---------|----------|
