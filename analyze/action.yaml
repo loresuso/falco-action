@@ -334,7 +334,7 @@ runs:
       cat /tmp/report_output.md >> $GITHUB_STEP_SUMMARY
 
   - name: Save captures and events on S3 bucket
-    if: ${{ inputs.save-capture == 'true' && env.AWS_ACCESS_KEY_ID != '' && env.AWS_SECRET_ACCESS_KEY != '' && env.S3_BUCKET != ''}}
+    if: ${{ inputs.save-capture == 'true' && env.AWS_ACCESS_KEY_ID != '' && env.AWS_SECRET_ACCESS_KEY != '' && env.AWS_S3_BUCKET_NAME != ''}}
     shell: bash
     run: |
       sudo apt-get update
