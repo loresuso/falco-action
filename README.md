@@ -56,6 +56,7 @@ Start action accept the following inputs:
 
 | Input            | Description                                      | Type    | Required | Default                     |
 |------------------|--------------------------------------------------|---------|----------|-----------------------------|
+| `mode`           | Start action with a mode. Can be live or analyze | choice  | false    | live                      |
 | `falco-version`  | Falco version to use                             | string  | false    | latest                      |
 | `config-file`    | Start action with a config file (analyze mode only) | string  | false    | src/syscall_ignore.config   |
 | `custom-rule-file` | Custom rule file                               | string  | false    | (empty)                     |
