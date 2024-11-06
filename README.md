@@ -200,12 +200,12 @@ By default, this action applies exceptions specified in the `filters.config` fil
 ### Report Customization
 The report produced by analyze action can be customized using the following inputs:
 
-| Option                 | Description              | Type    | Default | Required |
+| Option                 | Description              | Type    | Required | Default |
 |------------------------|--------------------------|---------|---------|----------|
-| `extract-connections`  | Extract connections      | boolean | true    | false    |
-| `extract-processes`    | Extract processes        | boolean | true    | false    |
-| `extract-dns`          | Extract DNS              | boolean | true    | false    |
-| `extract-containers`   | Extract containers       | boolean | true    | false    |
+| `extract-connections`  | Extract connections      | boolean | false    | true    |
+| `extract-processes`    | Extract processes        | boolean | false    | true    |
+| `extract-dns`          | Extract DNS              | boolean | false    | true    |
+| `extract-containers`   | Extract containers       | boolean | false    | true    |
 | `extract-written-files`| Extract written files    | boolean | false   | false    |
 | `extract-chisels`      | Extract chisels          | boolean | false   | false    |
 | `extract-hashes`       | Extract hashes           | boolean | false   | false    |
@@ -218,7 +218,7 @@ Analyze mode currently supports two main external dependencies:
 
 Analyze action currently accepts the following inputs for external dependencies:
 
-| Option                 | Description              | Type    | Default | Required |
+| Option                 | Description              | Type    | Required |  Default |
 |------------------------|--------------------------|---------|---------|----------|
 | `openai-model`        | OpenAI model to use for summary            | string  | false    | gpt-3.5-turbo       |
 | `openai-user-prompt`  | Message to send to OpenAI                  | string  | false    | (empty)             |
