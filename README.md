@@ -64,8 +64,9 @@ Start action accept the following inputs:
 
 
 #### Config file - syscall filtering
-Captures can become very big and hard to manage. For this reason, applying syscall filters would help keep captures light but provide all the information we need to assess what is going on in our workflows.
-By default, the action will drop the following syscalls contained in `syscall_ignore.config` file.
+Captures can become very big and complex to manage. To address this, applying syscall filters helps keep captures manageable while retaining all the necessary information to assess activity in our workflows. 
+
+By default, the action will drop the following syscalls specified in the `syscall_ignore.config` file.
 
 ```yaml
 {
