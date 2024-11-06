@@ -1,0 +1,63 @@
+on:
+    workflow_dispatch:
+
+name: Test Analyze Mode Save Captures to AWS Bucket
+
+jobs:
+  test-falco:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Start Falco
+      uses: darryk10/falco-action/start@ddcff83af077b30af70f188ba7b5446c98041446
+      with:
+        mode: analyze
+        verbose: true
+        
+        # this is meant to trigger a rule, will be based on what the PR did
+
+    - name: Test2
+      shell: bash
+      run: |
+                echo "Test2"
+                touch /tmp/pwd
+                #cat /home/runner/work/_temp/_runner_file_commands/save_state_*
+                
+    - name: DNS query
+      shell: bash
+      run: |
+              wget google.com
+              sleep 1
+              wget example.com
+              sleep 1
+
+    - name: Stop Falco
+      uses: darryk10/falco-action/stop@ddcff83af077b30af70f188ba7b5446c98041446
+      with:
+        mode: analyze
+        verbose: true
+
+  analyze:
+    runs-on: ubuntu-latest
+    needs: test-falco
+    permissions:
+      contents: read
+      actions: read
+    steps:
+    - name: Analyze
+      uses: darryk10/falco-action/analyze@ddcff83af077b30af70f188ba7b5446c98041446
+      with:
+        falco-version: '0.39.0'
+        openai-user-prompt: "Pls add remediation steps"
+        save-capture: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: "eu-south-1"
+        AWS_S3_BUCKET_NAME: "rule-testing-captures"
