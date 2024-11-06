@@ -19,16 +19,41 @@ jobs:
         mode: live
         falco-version: '0.39.0'
         verbose: true
-
-    - name: Overwrite Source Code
-      shell: bash
-      run: |
-        echo "pwned" > ${{ github.workspace }}/pwn.txt
     
     - name: Read Sensitive File
       run: |
         sleep 3
         docker run --rm --privileged ubuntu cat /etc/shadow
+        sleep 3
+
+    - name: Stop Falco
+      uses: darryk10/falco-action/stop@06536f0dfdb0978adbac81f019a7b5bfabe1e3a1
+      with:
+        mode: live
+        verbose: true
+  
+  test-falco-live-custom-rule:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Start Falco
+      uses: darryk10/falco-action/start@06536f0dfdb0978adbac81f019a7b5bfabe1e3a1
+      with:
+        mode: live
+        falco-version: '0.39.0'
+        custom-rule-file: '${{ github.workspace }}/rules/falco_cicd_rules.yaml'
+        verbose: true
+
+    - name: Overwrite Source Code
+      shell: bash
+      run: |
+        sleep 3
+        echo "pwned" > ${{ github.workspace }}/pwn.txt
         sleep 3
 
     - name: Stop Falco
