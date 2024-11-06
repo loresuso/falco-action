@@ -102,7 +102,7 @@ jobs:
         falco-version: '0.39.0'
 ```
 
-### Report Customisation
+### Report Customization
 The report produced by falco-action can be customized using the following inputs.
 
 | Option                 | Description              | Type    | Default | Required |
