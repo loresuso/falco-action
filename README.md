@@ -129,6 +129,7 @@ Analyze mode currently supports two main external dependencies:
       with:
         falco-version: '0.39.0'
         openai-user-prompt: "Pls add remediation steps"
+        openai-model: "gpt-3.5-turbo"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
