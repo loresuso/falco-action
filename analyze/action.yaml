@@ -81,11 +81,23 @@ runs:
     shell: bash
     env:
       VERBOSE: ${{ inputs.verbose }}
+    id: start_falco
     run: |
       if [ "$VERBOSE" = "true" ]; then
         set -x
       fi
       stat /tmp/capture.scap
+
+
+      echo "{name}={value}" >> $GITHUB_OUTPUT
+      if [ "${{ inputs.filters-config }}" != "src/filters.config" ]; then
+        echo "Using custom config"
+        echo "config_file=${{ inputs.filters-config }}" >> $GITHUB_OUTPUT
+      else
+        echo "Using default config"
+        echo "config_file=${{github.action_path}}/${{inputs.config-file}}" >> $GITHUB_OUTPUT
+      fi
+
 
       MOUNT_CUSTOM_RULE=""
       if [[ -f "${{inputs.custom-rule-file}}" ]]; then
@@ -107,7 +119,7 @@ runs:
       VERBOSE: ${{ inputs.verbose }}
     run: |
       OUTBOUND_FILTER="(((evt.type = connect and evt.dir=<) or (evt.type in (sendto,sendmsg,sendmmsg) and evt.dir=< and fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and (fd.typechar = 4 or fd.typechar = 6) and (fd.ip != \"0.0.0.0\" and fd.net != \"127.0.0.0/8\" and not fd.snet in (\"10.0.0.0/8\", \"172.16.0.0/12\", \"192.168.0.0/16\")))" 
-      CUSTOM_FILTERS=$(jq -r '.outbound_connections // [] | .[] | "and not (\(.condition) )"' "${{github.action_path}}/${{inputs.filters-config}}" | sed "s/'/\"/g" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+      CUSTOM_FILTERS=$(jq -r '.outbound_connections // [] | .[] | "and not (\(.condition) )"' "${{ steps.start_falco.outputs.config_file }}" | sed "s/'/\"/g" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
       if [ "${{ inputs.verbose }}" = "true" ]; then
         echo "Custom filters: $CUSTOM_FILTERS"
       fi
