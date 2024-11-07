@@ -83,7 +83,15 @@ runs:
       fi
 
       IGNORE_FILTER_FOLDER=${{github.action_path}}/src
-      CONFIG_FILE="${{github.action_path}}/${{inputs.config-file}}"
+      
+
+      if [ "${{ inputs.config-file }}" != "src/syscall_ignore.config" ]; then
+        echo "Using custom config"
+        CONFIG_FILE=${{ inputs.config-file }}
+      else
+        echo "Using default config"
+        CONFIG_FILE="${{github.action_path}}/${{inputs.config-file}}"
+      fi
 
       if [ ! -e "$CONFIG_FILE" ]; then
         echo "Config File does not exist."
