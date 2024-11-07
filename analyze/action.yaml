@@ -133,7 +133,7 @@ runs:
       VERBOSE: ${{ inputs.verbose }}
     run: |
       FILE_WRITTEN_FILTER="evt.type in (open,openat,openat2) and evt.is_open_write=true and fd.typechar=\"f\" and fd.num>=0"
-      CUSTOM_FILTERS=$(jq -r '.written_files // [] | .[] | "and not (\(.condition) )"' "${{github.action_path}}/${{inputs.filters-config}}" | sed "s/'/\"/g" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+      CUSTOM_FILTERS=$(jq -r '.written_files // [] | .[] | "and not (\(.condition) )"' "${{ steps.start_falco.outputs.config_file }}" | sed "s/'/\"/g" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
       if [ "${{ inputs.verbose }}" = "true" ]; then
         echo "Custom filters: $CUSTOM_FILTERS"
       fi
@@ -147,7 +147,7 @@ runs:
       VERBOSE: ${{ inputs.verbose }}
     run: |
       PROC_FILTER="evt.type in (execve, execveat) and evt.dir=< and evt.arg.res=0"
-      CUSTOM_FILTERS=$(jq -r '.processes // [] | .[] | "and not (\(.condition) )"' "${{github.action_path}}/${{inputs.filters-config}}" | sed "s/'/\"/g" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+      CUSTOM_FILTERS=$(jq -r '.processes // [] | .[] | "and not (\(.condition) )"' "${{ steps.start_falco.outputs.config_file }}" | sed "s/'/\"/g" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
       if [ "${{ inputs.verbose }}" = "true" ]; then
         echo "Custom filters: $CUSTOM_FILTERS"
       fi
