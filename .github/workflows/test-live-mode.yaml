@@ -26,6 +26,11 @@ jobs:
         docker run --rm --privileged ubuntu cat /etc/shadow
         sleep 3
 
+    - name: Id
+      run: |
+        id
+        groups
+
     - name: Stop Falco
       uses: darryk10/falco-action/stop@5e0ba030dc661da9641c3206c35f1a29e85259a2
       with:
