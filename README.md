@@ -13,6 +13,10 @@ Let's delve into their details.
 
 > Note: we recommend users to always pin the dependencies of this GitHub Action to ensure the use of an immutable release
 
+
+<img src="media/github-falco-action.drawio.png">
+
+
 ## Live mode
 
 Live mode is meant to protect a single job at runtime. To use this mode, only the `start` and `stop` actions are required. 
