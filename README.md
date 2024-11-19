@@ -14,12 +14,11 @@ Let's delve into their details.
 > Note: we recommend users to always pin the dependencies of this GitHub Action to ensure the use of an immutable release
 
 
-<img src="media/github-falco-action.drawio.png">
-
-
 ## Live mode
 
 Live mode is meant to protect a single job at runtime. To use this mode, only the `start` and `stop` actions are required. 
+
+<img src="media/github-falco-action-live-mode.png">
 
 The `start` action will be responsible of starting `Falco` in a Docker container using its `modern_ebpf` probe. 
 In turn, the `stop` action will stop the container, and a summary of triggered Falco rules will be printed in the job summary. 
@@ -107,6 +106,9 @@ Stop action accept the following inputs:
 ## Analyze mode
 
 Analyze mode is meant to offer a more detailed report. 
+
+<img src="media/github-falco-action-analyze-mode.png">
+
 To achieve this, a `scap` file is generated via a [Sysdig OS](https://github.com/draios/sysdig) container, which is started and stopped using the `start` and `stop` actions, respectively. The capture file is then uploaded as an artifact and passed to a subsequent `analyze` job, that uses the `analyze` action. The latter may use additional secrets we want to keep separate from the job we are protecting and integrate with external services to provide more relevant security information, such as OpenAI, VirusTotal, and more. 
 The final report will (configurably) contain:
 - Falco rules triggered during steps' execution. 
