@@ -118,6 +118,9 @@ runs:
     env:
       VERBOSE: ${{ inputs.verbose }}
     run: |
+      if [ "$VERBOSE" = "true" ]; then
+        set -x
+      fi
       OUTBOUND_FILTER="(((evt.type = connect and evt.dir=<) or (evt.type in (sendto,sendmsg,sendmmsg) and evt.dir=< and fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and (fd.typechar = 4 or fd.typechar = 6) and (fd.ip != \"0.0.0.0\" and fd.net != \"127.0.0.0/8\" and not fd.snet in (\"10.0.0.0/8\", \"172.16.0.0/12\", \"192.168.0.0/16\")))" 
       CUSTOM_FILTERS=$(jq -r '.outbound_connections // [] | .[] | "and not (\(.condition) )"' "${{ steps.start_falco.outputs.config_file }}" | sed "s/'/\"/g" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
       if [ "${{ inputs.verbose }}" = "true" ]; then
@@ -132,6 +135,9 @@ runs:
     env:
       VERBOSE: ${{ inputs.verbose }}
     run: |
+      if [ "$VERBOSE" = "true" ]; then
+        set -x
+      fi
       FILE_WRITTEN_FILTER="evt.type in (open,openat,openat2) and evt.is_open_write=true and fd.typechar=\"f\" and fd.num>=0"
       CUSTOM_FILTERS=$(jq -r '.written_files // [] | .[] | "and not (\(.condition) )"' "${{ steps.start_falco.outputs.config_file }}" | sed "s/'/\"/g" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
       if [ "${{ inputs.verbose }}" = "true" ]; then
@@ -146,6 +152,9 @@ runs:
     env:
       VERBOSE: ${{ inputs.verbose }}
     run: |
+      if [ "$VERBOSE" = "true" ]; then
+        set -x
+      fi
       PROC_FILTER="evt.type in (execve, execveat) and evt.dir=< and evt.arg.res=0"
       CUSTOM_FILTERS=$(jq -r '.processes // [] | .[] | "and not (\(.condition) )"' "${{ steps.start_falco.outputs.config_file }}" | sed "s/'/\"/g" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
       if [ "${{ inputs.verbose }}" = "true" ]; then
@@ -160,6 +169,9 @@ runs:
     env:
       VERBOSE: ${{ inputs.verbose }}
     run: |
+      if [ "$VERBOSE" = "true" ]; then
+        set -x
+      fi
       ${{github.action_path}}/../common/run_sysdig.sh chisel "/tmp/capture.scap" "udp_extract.lua" "/tmp/udp_extract.txt"
       ${{github.action_path}}/../common/run_sysdig.sh chisel "/tmp/capture.scap" "topconns.lua" "/tmp/top_connection.txt"
       ${{github.action_path}}/../common/run_sysdig.sh chisel "/tmp/capture.scap" "topprocs_net.lua" "/tmp/topprocs_net.txt"
@@ -170,6 +182,9 @@ runs:
     env:
       VERBOSE: ${{ inputs.verbose }}
     run: |
+      if [ "$VERBOSE" = "true" ]; then
+        set -x
+      fi
       DNS_FILTER="evt.type in (recvmsg,read,recv,recvfrom) and fd.rport=53 and fd.l4proto=udp"
       DNS_OUTPUT="%evt.buffer"
       ${{github.action_path}}/../common/run_sysdig.sh filter "/tmp/capture.scap" "$DNS_FILTER" "$DNS_OUTPUT" "/tmp/buffers.txt"
@@ -190,7 +205,10 @@ runs:
     shell: bash
     env:
       VERBOSE: ${{ inputs.verbose }}
-    run: |      
+    run: |    
+      if [ "$VERBOSE" = "true" ]; then
+        set -x
+      fi  
       cat /tmp/proc.txt| jq '."proc.exepath"' | tr -d "\"" | while read -r file; do
         if [ -f "$file" ]; then
             line=$(sha256sum "$file")
@@ -210,6 +228,9 @@ runs:
     env:
       VERBOSE: ${{ inputs.verbose }}
     run: |
+      if [ "$VERBOSE" = "true" ]; then
+        set -x
+      fi
       CONTAINER_FILTER="evt.type=container"
       CONTAINER_OUTPUT="%container.name,%container.image.repository"
       ${{github.action_path}}/../common/run_sysdig.sh filter "/tmp/capture.scap" "$CONTAINER_FILTER" "$CONTAINER_OUTPUT" "/tmp/containers.txt"
@@ -226,7 +247,11 @@ runs:
       RUN_ID: ${{ github.run_id }}
       REPO: ${{ github.repository }}
       GITHUB_TOKEN: ${{ github.token }}
+      VERBOSE: ${{ inputs.verbose }}
     run: |
+      if [ "$VERBOSE" = "true" ]; then
+        set -x
+      fi
       echo "Retrieving details for run_id=$RUN_ID"
       curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
         -H "Accept: application/vnd.github.v3+json" \
@@ -246,7 +271,11 @@ runs:
     env:
       RUN_ID: ${{ github.run_id }}
       REPO: ${{ github.repository }}
+      VERBOSE: ${{ inputs.verbose }}
     run: |
+      if [ "$VERBOSE" = "true" ]; then
+        set -x
+      fi
       python3 -m pip install -r ${{github.action_path}}/../common/requirements.txt
       # Falco events
       if [[ -s /tmp/falco_events.json ]]; then
