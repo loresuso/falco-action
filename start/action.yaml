@@ -44,7 +44,7 @@ runs:
       VERBOSE: ${{ inputs.verbose }}
       FALCO_VERSION: ${{ inputs.falco-version }}
       CUSTOM_RULE_FILE: ${{ inputs.custom-rule-file }}
-      DEFAULT_CI_CD_RULES: ${{ inputs.mount-cicd-rules }}
+      DEFAULT_CI_CD_RULES: ${{ inputs.cicd-rules }}
     shell: bash
     run: |
       if [[ "$VERBOSE" == "true" ]]; then
