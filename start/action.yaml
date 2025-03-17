@@ -23,8 +23,13 @@ inputs:
   custom-rule-file:
     description: 'Custom rule file'
     type: string
-    default: '${{github.action_path}}/rules/falco_cicd_rules.yaml'
+    default: ''
     required: false
+  cicd-rules:
+    description: 'Load the default CICD rulesn from the Falco community'
+    type: boolean
+    required: false
+    default: true
   verbose:
     description: 'Enable verbose logs'
     type: boolean
@@ -39,18 +44,25 @@ runs:
       VERBOSE: ${{ inputs.verbose }}
       FALCO_VERSION: ${{ inputs.falco-version }}
       CUSTOM_RULE_FILE: ${{ inputs.custom-rule-file }}
+      DEFAULT_CI_CD_RULES: ${{ inputs.mount-cicd-rules }}
     shell: bash
     run: |
       if [[ "$VERBOSE" == "true" ]]; then
         set -x
       fi
 
-      MOUNT_CUSTOM_RULE=""
       if [[ -f "$CUSTOM_RULE_FILE" ]]; then
         if [ "$VERBOSE" = "true" ]; then
           echo "Loading custom rules from $CUSTOM_RULE_FILE"
         fi
         MOUNT_CUSTOM_RULE="-v $CUSTOM_RULE_FILE:/etc/falco/rules.d/custom_rules.yaml"
+      fi
+
+      if [[ "$DEFAULT_CI_CD_RULES" == "true" ]]; then
+        if [ "$VERBOSE" = "true" ]; then
+          echo "Loading default CICD rules"
+        fi
+        MOUNT_CICD_DEFAULT_RULES="-v ${{github.action_path}}/rules/falco_cicd_rules.yaml:/etc/falco/rules.d/cicd_rules.yaml"
       fi
 
       docker run --rm -d \
@@ -61,6 +73,7 @@ runs:
         -v /proc:/host/proc:ro \
         -v /etc:/host/etc:ro \
         $MOUNT_CUSTOM_RULE \
+        $MOUNT_CICD_DEFAULT_RULES \
         falcosecurity/falco-no-driver:$FALCO_VERSION falco -o "json_output=true" -o "file_output.enabled=true" -o "file_output.keep_alive=false" -o "file_output.filename=/tmp/falco_events.json" -o "engine.kind=modern_ebpf"
 
       # Wait for the Falco container to be fully started
