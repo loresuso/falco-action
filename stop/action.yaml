@@ -72,6 +72,7 @@ runs:
       VERBOSE: ${{ inputs.verbose }}
       ACTION_PATH: ${{ github.action_path }}
       PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+      OWNER: ${{ github.repository_owner }}
     run: |
       if [[ "$VERBOSE" == "true" ]]; then
         set -x
@@ -96,10 +97,9 @@ runs:
             -H "Authorization: token $GITHUB_TOKEN" \
             -H "Content-Type: application/json" \
             -d "{\"body\": \"***Falco Rules*** \\n\\n ${FILE_CONTENT} \\n\\n Find out more at https://github.com/$REPO/actions/runs/$RUN_ID\"}" \
-            https://api.github.com/repos/$REPO/issues/$PULL_REQUEST_NUMBER/comments
-        else
-          cat /tmp/report_output.md >> $GITHUB_STEP_SUMMARY
+            https://api.github.com/repos/$OWNER/$REPO/issues/$PULL_REQUEST_NUMBER/comments
         fi
+        cat /tmp/report_output.md >> $GITHUB_STEP_SUMMARY
       fi
   
   - name: Upload Capture for Analyze mode
