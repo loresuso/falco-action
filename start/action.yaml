@@ -23,7 +23,7 @@ inputs:
   custom-rule-file:
     description: 'Custom rule file'
     type: string
-    default: ''
+    default: '${{github.action_path}}/rules/falco_cicd_rules.yaml'
     required: false
   verbose:
     description: 'Enable verbose logs'
