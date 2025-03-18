@@ -86,13 +86,13 @@ runs:
     shell: bash
     env:
       VERBOSE: ${{ inputs.verbose }}
+      CUSTOM_RULE_FILE: ${{ inputs.custom-rule-file }}
     id: start_falco
     run: |
       if [ "$VERBOSE" = "true" ]; then
         set -x
+        stat /tmp/capture.scap
       fi
-      stat /tmp/capture.scap
-
 
       echo "{name}={value}" >> $GITHUB_OUTPUT
       if [ "${{ inputs.filters-config }}" != "src/filters.config" ]; then
@@ -103,13 +103,12 @@ runs:
         echo "config_file=${{github.action_path}}/${{inputs.filters-config}}" >> $GITHUB_OUTPUT
       fi
 
-
       MOUNT_CUSTOM_RULE=""
-      if [[ -f "${{inputs.custom-rule-file}}" ]]; then
-        if [ "${{ inputs.verbose }}" = "true" ]; then
-          echo "Loading custom rules from ${{inputs.custom-rule-file}}"
+      if [[ -f "$CUSTOM_RULE_FILE" ]]; then
+        if [ "$VERBOSE" = "true" ]; then
+          echo "Loading custom rules from $CUSTOM_RULE_FILE"
         fi
-        MOUNT_CUSTOM_RULE="-v ${{inputs.custom-rule-file}}:/etc/falco/rules.d/custom_rules.yaml"
+        MOUNT_CUSTOM_RULE="-v $CUSTOM_RULE_FILE:/etc/falco/rules.d/custom_rules.yaml"
       fi
 
       docker run --rm --name falco \
